@@ -52,8 +52,9 @@
 %globalDTD;
 ]>
 
-<window title="&downloadManager.title;" id="downloads-window"
-        onload="DownloadsInit();"
+<window id="downloads-window"
+        title="&downloadManager.title;" statictitle="&downloadManager.title;"
+        onload="DownloadsInit();" onunload="DownloadsShutdown();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="500" height="400" screenX="10" screenY="10"
         persist="width height screenX screenY sizemode"
@@ -61,6 +62,8 @@
 
   <script type="application/x-javascript"
           src="chrome://suitedlmgrui/content/downloads/downloadmanager.js"/>
+  <script type="application/javascript"
+          src="chrome://suitedlmgrui/content/downloads/DownloadProgressListener.js"/>
   <script type="application/x-javascript"
           src="chrome://suitedlmgrui/content/downloads/treeView.js"/>
 

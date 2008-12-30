@@ -35,10 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gDownloadTree;
-var gDownloadStatus;
-var gSearchBox;
-var gPrefService;
+let gDownloadTree;
+let gDownloadManager = Components.classes["@mozilla.org/download-manager;1"]
+                                 .createInstance(Components.interfaces.nsIDownloadManager);
+let gDownloadStatus;
+let gDownloadListener = null;
+let gSearchBox;
+let gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
+                             .getService(Components.interfaces.nsIPrefBranch);
 
 function DownloadsInit()
 {
@@ -49,7 +53,12 @@ function DownloadsInit()
   gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefBranch);
 
-  gDownloadTree.view = new DownloadTreeView();
+  gDownloadTree.view = new DownloadTreeView(gDownloadManager);
+
+  // The DownloadProgressListener (DownloadProgressListener.js) handles progress
+  // notifications.
+  gDownloadListener = new DownloadProgressListener();
+  gDownloadManager.addListener(gDownloadListener);
 
   searchDownloads("");
 
@@ -60,7 +69,78 @@ function DownloadsInit()
     gDownloadTree.view.selection.select(0);
 }
 
+function DownloadsShutdown()
+{
+  gDownloadManager.removeListener(gDownloadListener);
+}
+
 function searchDownloads(aInput)
 {
   //gDownloadTree.load();
+}
+
+// This is called by the progress listener.
+var gLastComputedMean = -1;
+var gLastActiveDownloads = 0;
+function onUpdateProgress()
+{
+  let numActiveDownloads = gDownloadManager.activeDownloadCount;
+
+  // Use the default title and reset "last" values if there's no downloads
+  if (numActiveDownloads == 0) {
+    document.title = document.documentElement.getAttribute("statictitle");
+    gLastComputedMean = -1;
+    gLastActiveDownloads = 0;
+
+    return;
+  }
+
+  // Establish the mean transfer speed and amount downloaded.
+  var mean = 0;
+  var base = 0;
+  var dls = gDownloadManager.activeDownloads;
+  while (dls.hasMoreElements()) {
+    let dl = dls.getNext().QueryInterface(Components.interfaces.nsIDownload);
+    if (dl.percentComplete < 100 && dl.size > 0) {
+      mean += dl.amountTransferred;
+      base += dl.size;
+    }
+  }
+
+  // Calculate the percent transferred, unless we don't have a total file size
+  let dlbundle = document.getElementById("dmBundle");
+  let title = dlbundle.getString("downloadsTitlePercent");
+  if (base == 0)
+    title = dlbundle.getString("downloadsTitleFiles");
+  else
+    mean = Math.floor((mean / base) * 100);
+
+  // Update title of window
+  if (mean != gLastComputedMean || gLastActiveDownloads != numActiveDownloads) {
+    gLastComputedMean = mean;
+    gLastActiveDownloads = numActiveDownloads;
+
+    // Get the correct plural form and insert number of downloads and percent
+    title = PluralForm.get(numActiveDownloads, title);
+    title = replaceInsert(title, 1, numActiveDownloads);
+    title = replaceInsert(title, 2, mean);
+
+    document.title = title;
+  }
+}
+
+/**
+ * Helper function to replace a placeholder string with a real string
+ *
+ * @param aText
+ *        Source text containing placeholder (e.g., #1)
+ * @param aIndex
+ *        Index number of placeholder to replace
+ * @param aValue
+ *        New string to put in place of placeholder
+ * @return The string with placeholder replaced with the new string
+ */
+function replaceInsert(aText, aIndex, aValue)
+{
+  return aText.replace("#" + aIndex, aValue);
 }

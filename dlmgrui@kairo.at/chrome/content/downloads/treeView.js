@@ -42,7 +42,14 @@ Components.utils.import("resource://gre/modules/PluralForm.jsm");
 var nsIDM = Components.interfaces.nsIDownloadManager;
 var nsITreeView = Components.interfaces.nsITreeView;
 
-function DownloadTreeView() { }
+function DownloadTreeView(aDownloadManager) {
+  this._tree = null;
+  this._selection = null;
+  this._dm = aDownloadManager;
+  this._dlList = [];
+  this._dlBundle = null;
+  this._satement = null;
+}
 
 DownloadTreeView.prototype = {
   QueryInterface: function(aIID) {
@@ -90,10 +97,14 @@ DownloadTreeView.prototype = {
   },
 
   getProgressMode: function(aRow, aColumn) {
+    let dl = this._dlList[aRow];
     switch (aColumn.id) {
       case "Progress":
-        return dl.isActive ? nsITreeView.PROGRESS_NORMAL
-                           : nsITreeView.PROGRESS_NONE;
+        if (dl.isActive)
+          return (dl.maxBytes >= 0) ? nsITreeView.PROGRESS_NORMAL
+                                    : nsITreeView.PROGRESS_UNDETERMINED;
+        else
+          return nsITreeView.PROGRESS_NONE;
     }
     return nsITreeView.PROGRESS_NONE;
   },
@@ -151,9 +162,19 @@ DownloadTreeView.prototype = {
       case "ProgressPercent":
         return dl.progress;
       case "TimeRemaining":
-        return dl.endTime;
+        let dld = this._dm.getDownload(dl.dlid);
+        let maxBytes = (dl.maxBytes == null) ? -1 : dl.maxBytes;
+        let speed = (dl.speed == null) ? -1 : dl.speed;
+        let lastSec = (dl.lastSec == null) ? Infinity : dl.lastSec;
+        // Calculate the time remaining if we have valid values
+        let seconds = (speed > 0) && (maxBytes > 0)
+                      ? (maxBytes - dld.currBytes) / speed
+                      : -1;
+        let [timeLeft, newLast] = DownloadUtils.getTimeLeft(seconds, lastSec);
+        dl.lastSec = newLast;
+        return timeLeft;
       case "Transferred":
-        return dl.currBytes + " of " + dl.maxBytes;
+        return DownloadUtils.getTransferTotal(dl.currBytes, dl.maxBytes);
       case "TransferRate":
         return "";
       case "TimeElapsed":
@@ -167,8 +188,6 @@ DownloadTreeView.prototype = {
   setTree: function(aTree) {
     this._tree = aTree;
     this._dlbundle = document.getElementById("dmBundle");
-    this._dm = Components.classes["@mozilla.org/download-manager;1"]
-                         .createInstance(nsIDM);
     this._dlList = [];
 
     this._statement = this._dm.DBConnection.createStatement(
@@ -208,6 +227,8 @@ DownloadTreeView.prototype = {
       attrs.progress = attrs.isActive
                          ? this._dm.getDownload(attrs.dlid).percentComplete
                          : 100;
+      // init lastSec for calculations of remaining time
+      attrs.lastSec = Infinity;
 
       this._dlList.push(attrs);
     }
