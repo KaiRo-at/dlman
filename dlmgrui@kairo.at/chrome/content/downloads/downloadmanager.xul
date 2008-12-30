@@ -64,6 +64,13 @@
   <script type="application/x-javascript"
           src="chrome://suitedlmgrui/content/downloads/treeView.js"/>
 
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="dmBundle"
+                  src="chrome://suitedlmgrui/locale/downloads/downloadmanager.properties"/>
+    <stringbundle id="progDlgBundle"
+                  src="chrome://global/locale/nsProgressDialog.properties"/>
+  </stringbundleset>
+
   <commandset id="tasksCommands">
     <!-- File Menu -->
     <command id="cmd_close" oncommand="window.close()"/>
@@ -139,6 +146,11 @@
     <treecols context="">
       <treecol id="Name" primary="true"
                label="&view.header.name.label;"
+               class="sortDirectionIndicator" width="3*" flex="3"
+               persist="width hidden ordinal sortActive sortDirection"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="Status"
+               label="&view.header.status.label;"
                class="sortDirectionIndicator" width="3*" flex="3"
                persist="width hidden ordinal sortActive sortDirection"/>
       <splitter class="tree-splitter"/>

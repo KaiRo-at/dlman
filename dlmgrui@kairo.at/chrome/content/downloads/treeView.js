@@ -35,11 +35,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
+Components.utils.import("resource://gre/modules/PluralForm.jsm");
+
+var nsIDM = Components.interfaces.nsIDownloadManager;
+var nsITreeView = Components.interfaces.nsITreeView;
+
 function DownloadTreeView() { }
 
 DownloadTreeView.prototype = {
   QueryInterface: function(aIID) {
-    if (aIID.equals(Components.interfaces.nsITreeView) ||
+    if (aIID.equals(nsITreeView) ||
         aIID.equals(Components.interfaces.nsISupports))
       return this;
 
@@ -85,11 +92,10 @@ DownloadTreeView.prototype = {
   getProgressMode: function(aRow, aColumn) {
     switch (aColumn.id) {
       case "Progress":
-        return (this._dlList[aRow].progress < 100)
-               ? Components.interfaces.nsITreeView.PROGRESS_NORMAL
-               : Components.interfaces.nsITreeView.PROGRESS_NONE;
+        return dl.isActive ? nsITreeView.PROGRESS_NORMAL
+                           : nsITreeView.PROGRESS_NONE;
     }
-    return Components.interfaces.nsITreeView.PROGRESS_NONE;
+    return nsITreeView.PROGRESS_NONE;
   },
 
   getCellValue: function(aRow, aColumn) {
@@ -101,34 +107,68 @@ DownloadTreeView.prototype = {
   },
 
   getCellText: function(aRow, aColumn) {
+    let dl = this._dlList[aRow];
     switch (aColumn.id) {
       case "Name":
-        let file = this._getLocalFileFromNativePathOrUrl(this._dlList[aRow].file);
+        let file = this._getLocalFileFromNativePathOrUrl(dl.file);
         return file.nativePath || file.path;
+      case "Status":
+        switch (dl.state) {
+          case nsIDM.DOWNLOAD_PAUSED:
+            return this._dlbundle.getFormattedString("pausedpct",
+              [DownloadUtils.getTransferTotal(dl.currBytes,
+                                              dl.maxBytes)]);
+          case nsIDM.DOWNLOAD_DOWNLOADING:
+            return this._dlbundle.getString("downloading");
+          case nsIDM.DOWNLOAD_FINISHED:
+            return this._dlbundle.getString("finished");
+          case nsIDM.DOWNLOAD_FAILED:
+            return this._dlbundle.getString("failed");
+          case nsIDM.DOWNLOAD_CANCELED:
+            return this._dlbundle.getString("canceled");
+          case nsIDM.DOWNLOAD_BLOCKED_PARENTAL: // Parental Controls
+          case nsIDM.DOWNLOAD_BLOCKED_POLICY:   // Security Zone Policy
+          case nsIDM.DOWNLOAD_DIRTY:            // possible virus/spyware
+            return this._dlbundle.getString("blocked");
+        }
+        return this._dlbundle.getString("notStarted");
       case "Progress":
-        return (this._dlList[aRow].progress < 100)
-               ? this._dlList[aRow].progress
-               : "Finished";
+        if (dl.isActive)
+          return dl.progress;
+        switch (dl.state) {
+          case nsIDM.DOWNLOAD_FINISHED:
+            return this._dlbundle.getString("finished");
+          case nsIDM.DOWNLOAD_FAILED:
+            return this._dlbundle.getString("failed");
+          case nsIDM.DOWNLOAD_CANCELED:
+            return this._dlbundle.getString("canceled");
+          case nsIDM.DOWNLOAD_BLOCKED_PARENTAL: // Parental Controls
+          case nsIDM.DOWNLOAD_BLOCKED_POLICY:   // Security Zone Policy
+          case nsIDM.DOWNLOAD_DIRTY:            // possible virus/spyware
+            return this._dlbundle.getString("blocked");
+        }
+        return this._dlbundle.getString("notStarted");
       case "ProgressPercent":
-        return this._dlList[aRow].progress;
+        return dl.progress;
       case "TimeRemaining":
-        return this._dlList[aRow].endTime;
+        return dl.endTime;
       case "Transferred":
-        return this._dlList[aRow].currBytes + " of " + this._dlList[aRow].maxBytes;
+        return dl.currBytes + " of " + dl.maxBytes;
       case "TransferRate":
         return "";
       case "TimeElapsed":
-        return this._dlList[aRow].startTime;
+        return dl.startTime;
       case "Source":
-        return this._dlList[aRow].uri;
+        return dl.uri;
     }
     return "";
   },
 
   setTree: function(aTree) {
     this._tree = aTree;
+    this._dlbundle = document.getElementById("dmBundle");
     this._dm = Components.classes["@mozilla.org/download-manager;1"]
-                         .createInstance(Components.interfaces.nsIDownloadManager);
+                         .createInstance(nsIDM);
     this._dlList = [];
 
     this._statement = this._dm.DBConnection.createStatement(
@@ -137,11 +177,11 @@ DownloadTreeView.prototype = {
       "FROM moz_downloads " +
       "ORDER BY isActive DESC, endTime DESC, startTime DESC");
 
-    this._statement.bindInt32Parameter(0, Components.interfaces.nsIDownloadManager.DOWNLOAD_NOTSTARTED);
-    this._statement.bindInt32Parameter(1, Components.interfaces.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
-    this._statement.bindInt32Parameter(2, Components.interfaces.nsIDownloadManager.DOWNLOAD_PAUSED);
-    this._statement.bindInt32Parameter(3, Components.interfaces.nsIDownloadManager.DOWNLOAD_QUEUED);
-    this._statement.bindInt32Parameter(4, Components.interfaces.nsIDownloadManager.DOWNLOAD_SCANNING);
+    this._statement.bindInt32Parameter(0, nsIDM.DOWNLOAD_NOTSTARTED);
+    this._statement.bindInt32Parameter(1, nsIDM.DOWNLOAD_DOWNLOADING);
+    this._statement.bindInt32Parameter(2, nsIDM.DOWNLOAD_PAUSED);
+    this._statement.bindInt32Parameter(3, nsIDM.DOWNLOAD_QUEUED);
+    this._statement.bindInt32Parameter(4, nsIDM.DOWNLOAD_SCANNING);
 
     while (this._statement.executeStep()) {
       // Try to get the attribute values from the statement
@@ -164,8 +204,10 @@ DownloadTreeView.prototype = {
       }
 
       // If the download is active, grab the real progress, otherwise default 100
-      let isActive = this._statement.getInt32(10);
-      attrs.progress = isActive ? this._dm.getDownload(attrs.dlid).percentComplete : 100;
+      attrs.isActive = this._statement.getInt32(10);
+      attrs.progress = attrs.isActive
+                         ? this._dm.getDownload(attrs.dlid).percentComplete
+                         : 100;
 
       this._dlList.push(attrs);
     }

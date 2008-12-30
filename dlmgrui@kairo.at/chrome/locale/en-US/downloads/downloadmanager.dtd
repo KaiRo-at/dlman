@@ -7,6 +7,7 @@
 <!ENTITY search.key                      "f">
 
 <!ENTITY view.header.name.label          "Name">
+<!ENTITY view.header.status.label        "Status">
 <!ENTITY view.header.progress.label      "Progress">
 <!ENTITY view.header.timeremaining.label "Time Left">
 <!ENTITY view.header.transferred.label   "Transferred">
@@ -24,7 +25,6 @@
 
 
 
-<!ENTITY view.header.status.label         "Status">
 
 <!ENTITY cmd.properties.label             "Properties">
 <!ENTITY cmd.properties.accesskey         "i">
