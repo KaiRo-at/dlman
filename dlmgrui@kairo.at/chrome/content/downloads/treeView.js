@@ -74,19 +74,19 @@ DownloadTreeView.prototype = {
   },
 
   // nsITreeView methods
-  getRowProperties: function(aIdx, aProperties) { },
+  getRowProperties: function(aRow, aProperties) { },
   getCellProperties: function(aRow, aColumn, aProperties) { },
   getColumnProperties: function(aColumn, aProperties) { },
-  isContainer: function(aIdx) { return false; },
-  isContainerOpen: function(aIdx) { return false; },
-  isContainerEmpty: function(aIdx) { return false; },
-  isSeparator: function(aIdx) { return false; },
+  isContainer: function(aRow) { return false; },
+  isContainerOpen: function(aRow) { return false; },
+  isContainerEmpty: function(aRow) { return false; },
+  isSeparator: function(aRow) { return false; },
   isSorted: function() { return false; },
   canDrop: function(aIdx, aOrientation) { return false; },
   drop: function(aIdx, aOrientation) { },
   getParentIndex: function(aRow) { return -1; },
   hasNextSibling: function(aRow, aAfterIdx) { return false; },
-  getLevel: function(aIdx) { return 0; },
+  getLevel: function(aRow) { return 0; },
 
   getImageSrc: function(aRow, aColumn) {
     switch (aColumn.id) {
@@ -187,7 +187,7 @@ DownloadTreeView.prototype = {
         return "";
       case "TimeElapsed":
         if (dl.endTime && dl.startTime && (dl.endTime > dl.startTime)) {
-          let seconds = dl.endTime - dl.startTime;
+          let seconds = (dl.endTime - dl.startTime) / 1000;
           let [time1, unit1, time2, unit2] =
             DownloadUtils.convertTimeUnits(seconds);
           if (seconds < 3600 || time2 == 0)
@@ -255,7 +255,7 @@ DownloadTreeView.prototype = {
     //    notifyObservers(window, "download-manager-ui-done", null), 0);
   },
 
-  toggleOpenState: function(aIdx) { },
+  toggleOpenState: function(aRow) { },
   cycleHeader: function(aColumn) { },
   selectionChanged: function() { },
   cycleCell: function(aRow, aColumn) { },
@@ -303,9 +303,12 @@ DownloadTreeView.prototype = {
 
   updateDownload: function(aDownload) {
     let row = this._getIdxForID(aDownload.id);
-    this._dlList[row].currBytes = aDownload.amountTransferred;
-    this._dlList[row].maxBytes = aDownload.size;
-    this._dlList[row].progress = aDownload.percentComplete;
+    if (this._dlList[row].currBytes != aDownload.amountTransferred) {
+      this._dlList[row].endTime = Date.now();
+      this._dlList[row].currBytes = aDownload.amountTransferred;
+      this._dlList[row].maxBytes = aDownload.size;
+      this._dlList[row].progress = aDownload.percentComplete;
+    }
     if (this._dlList[row].state != aDownload.state) {
       this._dlList[row].state = aDownload.state;
       switch (this._dlList[row].state) {
