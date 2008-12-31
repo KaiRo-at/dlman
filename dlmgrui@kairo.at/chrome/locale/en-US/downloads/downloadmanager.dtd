@@ -6,6 +6,10 @@
 <!ENTITY search.emptytext                "Search Downloads">
 <!ENTITY search.key                      "f">
 
+<!ENTITY cmd.clearList.label              "Clear List">
+<!ENTITY cmd.clearList.tooltip            "Removes completed, canceled, and failed downloads from the list">
+<!ENTITY cmd.clearList.accesskey          "C">
+
 <!ENTITY view.header.name.label          "Name">
 <!ENTITY view.header.status.label        "Status">
 <!ENTITY view.header.progress.label      "Progress">
@@ -16,12 +20,24 @@
 <!ENTITY view.header.progresstext.label  "&#37;">
 <!ENTITY view.header.source.label        "Source">
 
-
-
-
-
-
-
+<!ENTITY cmd.pause.label                 "Pause">
+<!ENTITY cmd.pause.accesskey             "P">
+<!ENTITY cmd.resume.label                "Resume">
+<!ENTITY cmd.resume.accesskey            "R">
+<!ENTITY cmd.retry.label                 "Retry">
+<!ENTITY cmd.retry.accesskey             "R">
+<!ENTITY cmd.cancel.label                "Cancel">
+<!ENTITY cmd.cancel.accesskey            "C">
+<!ENTITY cmd.remove.label                "Remove From List">
+<!ENTITY cmd.remove.accesskey            "e">
+<!ENTITY cmd.open.label                  "Open">
+<!ENTITY cmd.open.accesskey              "O">
+<!ENTITY cmd.show.label                  "Open Containing Folder">
+<!ENTITY cmd.show.accesskey              "F">
+<!ENTITY cmd.goToDownloadPage.label      "Go to Download Page">
+<!ENTITY cmd.goToDownloadPage.accesskey  "G">
+<!ENTITY cmd.copyDownloadLink.label      "Copy Download Link">
+<!ENTITY cmd.copyDownloadLink.accesskey  "L">
 
 
 
@@ -29,19 +45,4 @@
 <!ENTITY cmd.properties.label             "Properties">
 <!ENTITY cmd.properties.accesskey         "i">
 <!ENTITY cmd.properties.keybinding        "i">
-<!ENTITY cmd.pause.label                  "Pause">
-<!ENTITY cmd.pause.accesskey              "P">
-<!ENTITY cmd.remove.label                 "Remove from List">
-<!ENTITY cmd.remove.accesskey             "R">
-<!ENTITY cmd.copyurl.label                "Copy URL">
-<!ENTITY cmd.copyurl.accesskey            "U">
-<!ENTITY cmd.cancel.label                 "Cancel">
-<!ENTITY cmd.cancel.accesskey             "C">
-<!ENTITY cmd.openfile.label               "Launch File">
-<!ENTITY cmd.openfile.accesskey           "L">
-<!ENTITY cmd.showinshell.label            "Show File Location">
-<!ENTITY cmd.showinshell.accesskey        "F">
-<!ENTITY dm.tooltip                       "Toolbar">
 <!ENTITY confirmCancel "Are you sure you want to cancel the saving of this file?">
-<!ENTITY progressMsgNoRate "#1KB of #2KB">
-<!ENTITY rateMsg "#1KB/sec">

@@ -78,6 +78,7 @@
     <!-- File Menu -->
     <command id="cmd_close" oncommand="window.close()"/>
     <command id="cmd_quit"/>
+    <!-- Edit Menu -->
     <!-- Search Box -->
     <command id="cmd_search_focus"
              oncommand="gSearchBox.focus();"/>
@@ -102,7 +103,46 @@
   </keyset>
 
   <popupset id="downloadPopupset">
-    <popup id="downloadContext"/>
+    <popup id="downloadContext">
+      <menuitem id="dlContext-pause"
+                label="&cmd.pause.label;"
+                accesskey="&cmd.pause.accesskey;"
+                command="cmd_pause"/>
+      <menuitem id="dlContext-resume"
+                label="&cmd.resume.label;"
+                accesskey="&cmd.resume.accesskey;"
+                command="cmd_resume"/>
+      <menuitem id="dlContext-retry"
+                label="&cmd.retry.label;"
+                accesskey="&cmd.retry.accesskey;"
+                command="cmd_retry"/>
+      <menuitem id="dlContext-cancel"
+                label="&cmd.cancel.label;"
+                accesskey="&cmd.cancel.accesskey;"
+                command="cmd_cancel"/>
+      <menuitem id="dlContext-remove"
+                label="&cmd.remove.label;"
+                accesskey="&cmd.remove.accesskey;"
+                command="cmd_remove"/>
+      <menuseparator id="dlContext-separator1"/>
+      <menuitem id="dlContext-open"
+                label="&cmd.open.label;"
+                accesskey="&cmd.open.accesskey;"
+                command="cmd_open"/>
+      <menuitem id="dlContext-show"
+                label="&cmd.show.label;"
+                accesskey="&cmd.show.accesskey;"
+                cmd="cmd_show"/>
+      <menuitem id="dlContext-openReferrer"
+                label="&cmd.goToDownloadPage.label;"
+                accesskey="&cmd.goToDownloadPage.accesskey;"
+                command="cmd_openReferrer"/>
+      <menuitem id="dlContext-copyLocation"
+                label="&cmd.copyDownloadLink.label;"
+                accesskey="&cmd.copyDownloadLink.accesskey;"
+                command="cmd_copyLocation"/>
+      <menuitem id="cMenu_selectAll"/>
+    </popup>
   </popupset>
 
   <toolbox id="download-toolbox">
@@ -117,11 +157,28 @@
 
       <menu id="menu_Edit">
         <menupopup>
-          <menuitem id="menu_cut"/>
-          <menuitem id="menu_copy"/>
-          <menuitem id="menu_delete"/>
+          <menuitem id="dlMenu_pause"
+                    label="&cmd.pause.label;"
+                    accesskey="&cmd.pause.accesskey;"
+                    command="cmd_pause"/>
+          <menuitem id="dlMenu_resume"
+                    label="&cmd.resume.label;"
+                    accesskey="&cmd.resume.accesskey;"
+                    command="cmd_resume"/>
+          <menuitem id="dlMenu_retry"
+                    label="&cmd.retry.label;"
+                    accesskey="&cmd.retry.accesskey;"
+                    command="cmd_retry"/>
+          <menuitem id="dlMenu_cancel"
+                    label="&cmd.cancel.label;"
+                    accesskey="&cmd.cancel.accesskey;"
+                    command="cmd_cancel"/>
+          <menuitem id="dlMenu_remove"
+                    label="&cmd.remove.label;"
+                    accesskey="&cmd.remove.accesskey;"
+                    command="cmd_remove"/>
           <menuseparator/>
-          <menuitem id="cMenu_selectAll"/>
+          <menuitem id="menu_selectAll"/>
         </menupopup>
       </menu>
       <menu id="tasksMenu"/>
@@ -138,6 +195,11 @@
                type="search"
                emptytext="&search.emptytext;"
                oncommand="searchDownloads(this.value);"/>
+      <spacer flex="1"/>
+      <button id="clearListButton" command="cmd_clearList"
+              label="&cmd.clearList.label;"
+              accesskey="&cmd.clearList.accesskey;"
+              tooltiptext="&cmd.clearList.tooltip;"/>
     </toolbar>
   </toolbox>
 

@@ -57,6 +57,8 @@ function DownloadsInit()
   gDownloadTreeView = new DownloadTreeView(gDownloadManager);
   gDownloadTree.view = gDownloadTreeView;
 
+  gDownloadTree.controllers.appendController(dlTreeController);
+
   // The DownloadProgressListener (DownloadProgressListener.js) handles progress
   // notifications.
   gDownloadListener = new DownloadProgressListener();
@@ -146,3 +148,26 @@ function replaceInsert(aText, aIndex, aValue)
 {
   return aText.replace("#" + aIndex, aValue);
 }
+
+let dlTreeController = {
+  supportsCommand: function dVC_supportsCommand (aCommand)
+  {
+    switch (aCommand) {
+    case "cmd_pause":
+    case "cmd_resume":
+    case "cmd_retry":
+    case "cmd_cancel":
+    case "cmd_remove":
+    case "cmd_open":
+    case "cmd_show":
+    case "cmd_openReferrer":
+    case "cmd_copyLocation":
+    case "cmd_selectAll":
+      return true;
+    }
+    return false;
+  },
+  isCommandEnabled: function(aCommand){ return false; },
+  doCommand: function(aCommand){ },
+  onEvent: function(aEvent){ }
+};
