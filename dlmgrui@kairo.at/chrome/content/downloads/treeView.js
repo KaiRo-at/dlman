@@ -122,7 +122,7 @@ DownloadTreeView.prototype = {
     switch (aColumn.id) {
       case "Name":
         let file = this._getLocalFileFromNativePathOrUrl(dl.file);
-        return file.nativePath || file.path;
+        return file.nativeLeafName || file.leafName;
       case "Status":
         switch (dl.state) {
           case nsIDM.DOWNLOAD_PAUSED:
@@ -162,23 +162,39 @@ DownloadTreeView.prototype = {
       case "ProgressPercent":
         return dl.progress;
       case "TimeRemaining":
-        let dld = this._dm.getDownload(dl.dlid);
-        let maxBytes = (dl.maxBytes == null) ? -1 : dl.maxBytes;
-        let speed = (dl.speed == null) ? -1 : dl.speed;
-        let lastSec = (dl.lastSec == null) ? Infinity : dl.lastSec;
-        // Calculate the time remaining if we have valid values
-        let seconds = (speed > 0) && (maxBytes > 0)
-                      ? (maxBytes - dld.currBytes) / speed
-                      : -1;
-        let [timeLeft, newLast] = DownloadUtils.getTimeLeft(seconds, lastSec);
-        this._dlList[aRow].lastSec = newLast;
-        return timeLeft;
+        if (dl.isActive) {
+          let dld = this._dm.getDownload(dl.dlid);
+          let maxBytes = (dl.maxBytes == null) ? -1 : dl.maxBytes;
+          let speed = (dld.speed == null) ? -1 : dld.speed;
+          let lastSec = (dl.lastSec == null) ? Infinity : dl.lastSec;
+          // Calculate the time remaining if we have valid values
+          let seconds = (speed > 0) && (maxBytes > 0)
+                        ? (maxBytes - dl.currBytes) / speed
+                        : -1;
+          let [timeLeft, newLast] = DownloadUtils.getTimeLeft(seconds, lastSec);
+          this._dlList[aRow].lastSec = newLast;
+          return timeLeft;
+        }
+        return "";
       case "Transferred":
         return DownloadUtils.getTransferTotal(dl.currBytes, dl.maxBytes);
       case "TransferRate":
+        if (dl.state == nsIDM.DOWNLOAD_DOWNLOADING) {
+          let speed = this._dm.getDownload(dl.dlid).speed;
+          let [rate, unit] = DownloadUtils.convertByteUnits(speed);
+          return this._dlbundle.getFormattedString("speedFormat", [rate, unit]);
+        }
         return "";
       case "TimeElapsed":
-        return dl.startTime;
+        if (dl.endTime && dl.startTime && (dl.endTime > dl.startTime)) {
+          let seconds = dl.endTime - dl.startTime;
+          let [time1, unit1, time2, unit2] =
+            DownloadUtils.convertTimeUnits(seconds);
+          if (seconds < 3600 || time2 == 0)
+            return this._dlbundle.getFormattedString("timeSingle", [time1, unit1]);
+          return this._dlbundle.getFormattedString("timeDouble", [time1, unit1, time2, unit2]);
+        }
+        return "";
       case "Source":
         return dl.uri;
     }
