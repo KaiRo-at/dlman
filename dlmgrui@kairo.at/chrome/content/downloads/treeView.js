@@ -171,7 +171,7 @@ DownloadTreeView.prototype = {
                       ? (maxBytes - dld.currBytes) / speed
                       : -1;
         let [timeLeft, newLast] = DownloadUtils.getTimeLeft(seconds, lastSec);
-        dl.lastSec = newLast;
+        this._dlList[aRow].lastSec = newLast;
         return timeLeft;
       case "Transferred":
         return DownloadUtils.getTransferTotal(dl.currBytes, dl.maxBytes);
@@ -188,7 +188,6 @@ DownloadTreeView.prototype = {
   setTree: function(aTree) {
     this._tree = aTree;
     this._dlbundle = document.getElementById("dmBundle");
-    this._dlList = [];
 
     this._statement = this._dm.DBConnection.createStatement(
       "SELECT id, target, name, source, state, startTime, endTime, referrer, " +
@@ -252,6 +251,67 @@ DownloadTreeView.prototype = {
   performActionOnRow: function(aAction, aRow) { },
   performActionOnCell: function(aAction, aRow, aColumn) { },
 
+  // local public functions
+
+  addDownload: function(aDownload) {
+    let attrs = {
+      dlid: aDownload.id,
+      file: aDownload.target.spec,
+      target: aDownload.displayName,
+      uri: aDownload.source.spec,
+      state: aDownload.state,
+      progress: aDownload.percentComplete,
+      startTime: Math.round(aDownload.startTime / 1000),
+      endTime: Date.now(),
+      currBytes: aDownload.amountTransferred,
+      maxBytes: aDownload.size
+    };
+    switch (attrs.state) {
+      case nsIDM.DOWNLOAD_NOTSTARTED:
+      case nsIDM.DOWNLOAD_DOWNLOADING:
+      case nsIDM.DOWNLOAD_PAUSED:
+      case nsIDM.DOWNLOAD_QUEUED:
+      case nsIDM.DOWNLOAD_SCANNING:
+        attrs.isActive = 1;
+        break;
+      default:
+        attrs.isActive = 0;
+        break;
+    }
+    // init lastSec for calculations of remaining time
+    attrs.lastSec = Infinity;
+
+    this._dlList.unshift(attrs);
+    this._tree.rowCountChanged(0, 1);
+  },
+
+  updateDownload: function(aDownload) {
+    let row = this._getIdxForID(aDownload.id);
+    this._dlList[row].currBytes = aDownload.amountTransferred;
+    this._dlList[row].maxBytes = aDownload.size;
+    this._dlList[row].progress = aDownload.percentComplete;
+    if (this._dlList[row].state != aDownload.state) {
+      this._dlList[row].state = aDownload.state;
+      switch (this._dlList[row].state) {
+        case nsIDM.DOWNLOAD_NOTSTARTED:
+        case nsIDM.DOWNLOAD_DOWNLOADING:
+        case nsIDM.DOWNLOAD_PAUSED:
+        case nsIDM.DOWNLOAD_QUEUED:
+        case nsIDM.DOWNLOAD_SCANNING:
+          this._dlList[row].isActive = 1;
+          break;
+        default:
+          this._dlList[row].isActive = 0;
+          break;
+      }
+      // We should eventually know the referrer at some point
+      let referrer = aDownload.referrer;
+      if (referrer)
+        this._dlList[row].referrer = referrer.spec;
+    }
+    this._tree.invalidateRow(row);
+  },
+
   // local helper functions
 
   // -- copied from downloads.js: getLocalFileFromNativePathOrUrl()
@@ -277,6 +337,19 @@ DownloadTreeView.prototype = {
 
       return f;
     }
+  },
+
+  // get array index in _dlList for a given download ID
+  _getIdxForID: function(aDlID) {
+    let len = this._dlList.length;
+    let idx = 0;
+
+    for (; idx < len; idx++) {
+      if (idx in this._dlList &&
+          this._dlList[idx].dlid === aDlID)
+        return idx;
+    }
+    return -1;
   },
 
 };

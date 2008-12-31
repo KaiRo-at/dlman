@@ -36,10 +36,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 let gDownloadTree;
+let gDownloadTreeView;
 let gDownloadManager = Components.classes["@mozilla.org/download-manager;1"]
                                  .createInstance(Components.interfaces.nsIDownloadManager);
 let gDownloadStatus;
-let gDownloadListener = null;
+let gDownloadListener;
 let gSearchBox;
 let gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                              .getService(Components.interfaces.nsIPrefBranch);
@@ -53,7 +54,8 @@ function DownloadsInit()
   gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefBranch);
 
-  gDownloadTree.view = new DownloadTreeView(gDownloadManager);
+  gDownloadTreeView = new DownloadTreeView(gDownloadManager);
+  gDownloadTree.view = gDownloadTreeView;
 
   // The DownloadProgressListener (DownloadProgressListener.js) handles progress
   // notifications.
