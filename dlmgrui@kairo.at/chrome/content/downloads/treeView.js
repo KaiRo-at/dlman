@@ -121,7 +121,7 @@ DownloadTreeView.prototype = {
     let dl = this._dlList[aRow];
     switch (aColumn.id) {
       case "Name":
-        let file = this._getLocalFileFromNativePathOrUrl(dl.file);
+        let file = getLocalFileFromNativePathOrUrl(dl.file);
         return file.nativeLeafName || file.leafName;
       case "Status":
         switch (dl.state) {
@@ -267,7 +267,7 @@ DownloadTreeView.prototype = {
   performActionOnRow: function(aAction, aRow) { },
   performActionOnCell: function(aAction, aRow, aColumn) { },
 
-  // local public functions
+  // local public methods
 
   addDownload: function(aDownload) {
     let attrs = {
@@ -331,32 +331,11 @@ DownloadTreeView.prototype = {
     this._tree.invalidateRow(row);
   },
 
-  // local helper functions
-
-  // -- copied from downloads.js: getLocalFileFromNativePathOrUrl()
-  // we should be using real URLs all the time, but until
-  // bug 239948 is fully fixed, this will do...
-  //
-  // note, this will thrown an exception if the native path
-  // is not valid (for example a native Windows path on a Mac)
-  // see bug #392386 for details
-  _getLocalFileFromNativePathOrUrl: function(aPathOrUrl) {
-    if (aPathOrUrl.substring(0,7) == "file://") {
-      // if this is a URL, get the file from that
-      let ioSvc = Components.classes["@mozilla.org/network/io-service;1"].
-                  getService(Components.interfaces.nsIIOService);
-
-      // XXX it's possible that using a null char-set here is bad
-      const fileUrl = ioSvc.newURI(aPathOrUrl, null, null).
-                      QueryInterface(Components.interfaces.nsIFileURL);
-      return fileUrl.file.clone().QueryInterface(Components.interfaces.nsILocalFile);
-    } else {
-      // if it's a pathname, create the nsILocalFile directly
-      var f = new nsLocalFile(aPathOrUrl);
-
-      return f;
-    }
+  getRowData: function(aRow) {
+    return this._dlList[aRow];
   },
+
+  // local helper functions
 
   // get array index in _dlList for a given download ID
   _getIdxForID: function(aDlID) {

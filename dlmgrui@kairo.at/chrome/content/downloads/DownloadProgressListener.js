@@ -77,6 +77,7 @@ DownloadProgressListener.prototype = {
         gDownloadTreeView.updateDownload(aDownload);
         break;
     }
+    window.updateCommands("tree-select");
   },
 
   onProgressChange: function(aWebProgress, aRequest,

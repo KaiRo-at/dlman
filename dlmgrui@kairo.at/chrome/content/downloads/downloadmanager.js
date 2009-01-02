@@ -35,10 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+let nsIDM = Components.interfaces.nsIDownloadManager;
+
 let gDownloadTree;
 let gDownloadTreeView;
 let gDownloadManager = Components.classes["@mozilla.org/download-manager;1"]
-                                 .createInstance(Components.interfaces.nsIDownloadManager);
+                                 .createInstance(nsIDM);
 let gDownloadStatus;
 let gDownloadListener;
 let gSearchBox;
@@ -50,9 +52,6 @@ function DownloadsInit()
   gDownloadTree = document.getElementById("downloadTree");
   gDownloadStatus = document.getElementById("statusbar-display");
   gSearchBox = document.getElementById("search-box");
-
-  gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
-                           .getService(Components.interfaces.nsIPrefBranch);
 
   gDownloadTreeView = new DownloadTreeView(gDownloadManager);
   gDownloadTree.view = gDownloadTreeView;
@@ -84,8 +83,8 @@ function searchDownloads(aInput)
 }
 
 // This is called by the progress listener.
-var gLastComputedMean = -1;
-var gLastActiveDownloads = 0;
+let gLastComputedMean = -1;
+let gLastActiveDownloads = 0;
 function onUpdateProgress()
 {
   let numActiveDownloads = gDownloadManager.activeDownloadCount;
@@ -100,9 +99,9 @@ function onUpdateProgress()
   }
 
   // Establish the mean transfer speed and amount downloaded.
-  var mean = 0;
-  var base = 0;
-  var dls = gDownloadManager.activeDownloads;
+  let mean = 0;
+  let base = 0;
+  let dls = gDownloadManager.activeDownloads;
   while (dls.hasMoreElements()) {
     let dl = dls.getNext().QueryInterface(Components.interfaces.nsIDownload);
     if (dl.percentComplete < 100 && dl.size > 0) {
@@ -133,6 +132,94 @@ function onUpdateProgress()
   }
 }
 
+function openDownload(aDownloadData)
+{
+  var f = getLocalFileFromNativePathOrUrl(aDownloadData.file);
+  if (f.isExecutable()) {
+    let alertOnEXEOpen = true;
+    try {
+      alertOnEXEOpen = gPrefService.getBoolPref("browser.download.manager.alertOnEXEOpen");
+    } catch (e) { }
+
+    // On Vista and above, we rely on native security prompting for
+    // downloaded content.
+    try {
+      let sysInfo = Components.classes["@mozilla.org/system-info;1"]
+                              .getService(Components.interfaces.nsIPropertyBag2);
+      if (/^Windows/.match(sysInfo.getProperty("name")) &&
+          (parseFloat(sysInfo.getProperty("version")) >= 6))
+        alertOnEXEOpen = false;
+    } catch (ex) { }
+
+    if (alertOnEXEOpen) {
+      let dlbundle = document.getElementById("dmBundle");
+      let name = aDownload.getAttribute("target");
+      let message = dlbundle.getFormattedString("fileExecutableSecurityWarning", [name, name]);
+
+      let title = dlbundle.getString("fileExecutableSecurityWarningTitle");
+      let dontAsk = dlbundle.getString("fileExecutableSecurityWarningDontAsk");
+
+      let promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                .getService(Components.interfaces.nsIPromptService);
+      let checkbox = { value: false };
+      let open = promptSvc.confirmCheck(window, title, message, dontAsk, checkbox);
+
+      if (!open)
+        return;
+      gPrefService.setBoolPref("browser.download.manager.alertOnEXEOpen", !checkbox.value);
+    }
+  }
+  try {
+    f.launch();
+  } catch (ex) {
+    // if launch fails, try sending it through the system's external
+    // file: URL handler
+    let uri = Components.classes["@mozilla.org/network/io-service;1"]
+                        .getService(Components.interfaces.nsIIOService)
+                        .newFileURI(f);
+    let protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+                                .getService(Components.interfaces.nsIExternalProtocolService);
+    protocolSvc.loadUrl(uri);
+  }
+}
+
+function onSelect(aEvent) {
+  var selectionCount = gDownloadTreeView.selection.count;
+  if (selectionCount == 1) {
+    let selItemData = gDownloadTreeView.getRowData(gDownloadTree.currentIndex);
+    let file = getLocalFileFromNativePathOrUrl(selItemData.file);
+    gDownloadStatus.label = file.path;
+  } else
+    gDownloadStatus.label = "";
+
+  window.updateCommands("tree-select");
+}
+
+// -- copied from downloads.js: getLocalFileFromNativePathOrUrl()
+// we should be using real URLs all the time, but until
+// bug 239948 is fully fixed, this will do...
+//
+// note, this will thrown an exception if the native path
+// is not valid (for example a native Windows path on a Mac)
+// see bug #392386 for details
+function getLocalFileFromNativePathOrUrl(aPathOrUrl) {
+  if (aPathOrUrl.substring(0,7) == "file://") {
+    // if this is a URL, get the file from that
+    let ioSvc = Components.classes["@mozilla.org/network/io-service;1"].
+                getService(Components.interfaces.nsIIOService);
+
+    // XXX it's possible that using a null char-set here is bad
+    const fileUrl = ioSvc.newURI(aPathOrUrl, null, null).
+                    QueryInterface(Components.interfaces.nsIFileURL);
+    return fileUrl.file.clone().QueryInterface(Components.interfaces.nsILocalFile);
+  } else {
+    // if it's a pathname, create the nsILocalFile directly
+    var f = new nsLocalFile(aPathOrUrl);
+
+    return f;
+  }
+}
+
 /**
  * Helper function to replace a placeholder string with a real string
  *
@@ -150,24 +237,124 @@ function replaceInsert(aText, aIndex, aValue)
 }
 
 let dlTreeController = {
-  supportsCommand: function dVC_supportsCommand (aCommand)
+  supportsCommand: function(aCommand)
   {
     switch (aCommand) {
-    case "cmd_pause":
-    case "cmd_resume":
-    case "cmd_retry":
-    case "cmd_cancel":
-    case "cmd_remove":
-    case "cmd_open":
-    case "cmd_show":
-    case "cmd_openReferrer":
-    case "cmd_copyLocation":
-    case "cmd_selectAll":
-      return true;
+      case "cmd_pause":
+      case "cmd_resume":
+      case "cmd_retry":
+      case "cmd_cancel":
+      case "cmd_remove":
+      case "cmd_open":
+      case "cmd_show":
+      case "cmd_openReferrer":
+      case "cmd_copyLocation":
+      case "cmd_selectAll":
+        return true;
     }
     return false;
   },
-  isCommandEnabled: function(aCommand){ return false; },
-  doCommand: function(aCommand){ },
-  onEvent: function(aEvent){ }
+
+  isCommandEnabled: function(aCommand)
+  {
+    if (!gDownloadTreeView || !gDownloadTreeView.selection) return false;
+    let selectionCount = gDownloadTreeView.selection.count;
+    if (!selectionCount) return false;
+
+    let selItemData = gDownloadTreeView.getRowData(gDownloadTree.currentIndex);
+
+    let download = null; // used for getting an nsIDownload object
+
+    switch (aCommand) {
+      case "cmd_pause":
+        download = gDownloadManager.getDownload(selItemData.dlid);
+        return selItemData.isActive &&
+               selItemData.state != nsIDM.DOWNLOAD_PAUSED &&
+               download.resumable;
+      case "cmd_resume":
+        download = gDownloadManager.getDownload(selItemData.dlid);
+        return selItemData.state == nsIDM.DOWNLOAD_PAUSED &&
+               download.resumable;
+      case "cmd_open":
+      case "cmd_show":
+        // we can't reveal until the download is complete, because we have not given
+        // the file its final name until them.
+        let file = getLocalFileFromNativePathOrUrl(selItemData.file);
+        return selectionCount == 1 &&
+               selItemData.state == nsIDM.DOWNLOAD_FINISHED &&
+               file.exists();
+      case "cmd_cancel":
+        // XXX handling multiple selection would be nice
+        return selectionCount == 1 && selItemData.isActive;
+      case "cmd_retry":
+      case "cmd_remove":
+        return selectionCount == 1 &&
+               (selItemData.state == nsIDM.DOWNLOAD_FINISHED ||
+                selItemData.state == nsIDM.DOWNLOAD_CANCELED ||
+                selItemData.state == nsIDM.DOWNLOAD_BLOCKED_PARENTAL ||
+                selItemData.state == nsIDM.DOWNLOAD_BLOCKED_POLICY ||
+                selItemData.state == nsIDM.DOWNLOAD_DIRTY ||
+                selItemData.state == nsIDM.DOWNLOAD_FAILED);
+      case "cmd_openReferrer":
+        return !!selItemData.referrer;
+      case "cmd_copyLocation":
+        return true;
+      case "cmd_selectAll":
+        return gDownloadTreeView.rowCount != selectionCount;
+      default:
+        return false;
+    }
+  },
+
+  doCommand: function(aCommand){
+    let selectionCount = gDownloadTreeView.selection.count;
+    let selItemData = selectionCount == 1 ? gDownloadTreeView.getRowData(gDownloadTree.currentIndex) : null;
+
+    switch (aCommand) {
+      case "cmd_pause":
+        dump(aCommand + " not implemented yet!\n");
+        break;
+      case "cmd_resume":
+        dump(aCommand + " not implemented yet!\n");
+        break;
+      case "cmd_retry":
+        dump(aCommand + " not implemented yet!\n");
+        break;
+      case "cmd_cancel":
+        dump(aCommand + " not implemented yet!\n");
+        break;
+      case "cmd_remove":
+        dump(aCommand + " not implemented yet!\n");
+        break;
+      case "cmd_open":
+        openDownload(selItemData);
+        break;
+      case "cmd_show":
+        dump(aCommand + " not implemented yet!\n");
+        break;
+      case "cmd_openReferrer":
+        dump(aCommand + " not implemented yet!\n");
+        break;
+      case "cmd_copyLocation":
+        dump(aCommand + " not implemented yet!\n");
+        break;
+      case "cmd_selectAll":
+        gDownloadTreeView.selection.selectAll();
+        break;
+    }
+  },
+
+  onEvent: function(aEvent){
+    switch (aEvent) {
+    case "tree-select":
+      this.onCommandUpdate();
+    }
+  },
+
+  onCommandUpdate: function() {
+    let cmds = ["cmd_pause", "cmd_resume", "cmd_retry", "cmd_cancel", "cmd_remove",
+                "cmd_open", "cmd_show", "cmd_openReferrer", "cmd_copyLocation"];
+    for (let command in cmds)
+      goUpdateCommand(cmds[command]);
+  }
 };
