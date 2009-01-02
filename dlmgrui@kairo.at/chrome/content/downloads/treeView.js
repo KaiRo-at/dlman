@@ -331,6 +331,16 @@ DownloadTreeView.prototype = {
     this._tree.invalidateRow(row);
   },
 
+  removeTreeRow: function(aRow) {
+    // Make sure we have an item to remove
+    if (parseInt(aRow) < 0) return;
+
+    this._dlList.splice(aRow, 1);
+    this._tree.invalidate();
+
+    window.updateCommands("tree-select");
+  },
+
   getRowData: function(aRow) {
     return this._dlList[aRow];
   },
@@ -340,9 +350,7 @@ DownloadTreeView.prototype = {
   // get array index in _dlList for a given download ID
   _getIdxForID: function(aDlID) {
     let len = this._dlList.length;
-    let idx = 0;
-
-    for (; idx < len; idx++) {
+    for (let idx = 0; idx < len; idx++) {
       if (idx in this._dlList &&
           this._dlList[idx].dlid === aDlID)
         return idx;

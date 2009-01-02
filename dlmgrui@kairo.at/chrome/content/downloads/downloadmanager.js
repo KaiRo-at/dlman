@@ -134,8 +134,8 @@ function onUpdateProgress()
 
 function openDownload(aDownloadData)
 {
-  var f = getLocalFileFromNativePathOrUrl(aDownloadData.file);
-  if (f.isExecutable()) {
+  let file = getLocalFileFromNativePathOrUrl(aDownloadData.file);
+  if (file.isExecutable()) {
     let alertOnEXEOpen = true;
     try {
       alertOnEXEOpen = gPrefService.getBoolPref("browser.download.manager.alertOnEXEOpen");
@@ -153,7 +153,7 @@ function openDownload(aDownloadData)
 
     if (alertOnEXEOpen) {
       let dlbundle = document.getElementById("dmBundle");
-      let name = aDownload.getAttribute("target");
+      let name = aDownloadData.target;
       let message = dlbundle.getFormattedString("fileExecutableSecurityWarning", [name, name]);
 
       let title = dlbundle.getString("fileExecutableSecurityWarningTitle");
@@ -170,16 +170,41 @@ function openDownload(aDownloadData)
     }
   }
   try {
-    f.launch();
+    file.launch();
   } catch (ex) {
     // if launch fails, try sending it through the system's external
     // file: URL handler
     let uri = Components.classes["@mozilla.org/network/io-service;1"]
                         .getService(Components.interfaces.nsIIOService)
-                        .newFileURI(f);
+                        .newFileURI(file);
     let protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
                                 .getService(Components.interfaces.nsIExternalProtocolService);
     protocolSvc.loadUrl(uri);
+  }
+}
+
+function showDownload(aDownloadData)
+{
+  var file = getLocalFileFromNativePathOrUrl(aDownloadData.file);
+
+  try {
+    // Show the directory containing the file and select the file
+    file.reveal();
+  } catch (e) {
+    // If reveal fails for some reason (e.g., it's not implemented on unix or
+    // the file doesn't exist), try using the parent if we have it.
+    let parent = file.parent.QueryInterface(Components.interfaces.nsILocalFile);
+    if (!parent)
+      return;
+
+    try {
+      // "Double click" the parent directory to show where the file should be
+      parent.launch();
+    } catch (e) {
+      // If launch also fails (probably because it's not implemented), let the
+      // OS handler try to open the parent
+      openExternal(parent);
+    }
   }
 }
 
@@ -268,12 +293,14 @@ let dlTreeController = {
     switch (aCommand) {
       case "cmd_pause":
         download = gDownloadManager.getDownload(selItemData.dlid);
-        return selItemData.isActive &&
+        return selectionCount == 1 &&
+               selItemData.isActive &&
                selItemData.state != nsIDM.DOWNLOAD_PAUSED &&
                download.resumable;
       case "cmd_resume":
         download = gDownloadManager.getDownload(selItemData.dlid);
-        return selItemData.state == nsIDM.DOWNLOAD_PAUSED &&
+        return selectionCount == 1 &&
+               selItemData.state == nsIDM.DOWNLOAD_PAUSED &&
                download.resumable;
       case "cmd_open":
       case "cmd_show":
@@ -296,7 +323,7 @@ let dlTreeController = {
                 selItemData.state == nsIDM.DOWNLOAD_DIRTY ||
                 selItemData.state == nsIDM.DOWNLOAD_FAILED);
       case "cmd_openReferrer":
-        return !!selItemData.referrer;
+        return selectionCount == 1 && !!selItemData.referrer;
       case "cmd_copyLocation":
         return true;
       case "cmd_selectAll":
@@ -308,35 +335,68 @@ let dlTreeController = {
 
   doCommand: function(aCommand){
     let selectionCount = gDownloadTreeView.selection.count;
-    let selItemData = selectionCount == 1 ? gDownloadTreeView.getRowData(gDownloadTree.currentIndex) : null;
+    let selIdx = selectionCount == 1 ? gDownloadTree.currentIndex : -1;
+    let selItemData = selectionCount == 1 ? gDownloadTreeView.getRowData(selIdx) : null;
+
+    let m_selIdx = [selIdx];
+    if (selectionCount > 1) {
+      m_selIdx = [];
+      // walk all selected rows
+      let start = new Object();
+      let end = new Object();
+      let numRanges = gDownloadTreeView.selection.getRangeCount();
+      for (let rg = 0; rg < numRanges; rg++){
+        gDownloadTreeView.selection.getRangeAt(rg, start, end);
+        for (let row = start.value; row <= end.value; row++){
+          m_selIdx.push(row);
+        }
+      }
+    }
 
     switch (aCommand) {
       case "cmd_pause":
-        dump(aCommand + " not implemented yet!\n");
+        gDownloadManager.pauseDownload(selItemData.dlid);
         break;
       case "cmd_resume":
-        dump(aCommand + " not implemented yet!\n");
+        gDownloadManager.resumeDownload(selItemData.dlid);
         break;
       case "cmd_retry":
-        dump(aCommand + " not implemented yet!\n");
+        gDownloadManager.retryDownload(selItemData.dlid);
+        gDownloadTreeView.removeTreeRow(selIdx);
         break;
       case "cmd_cancel":
-        dump(aCommand + " not implemented yet!\n");
+        gDownloadManager.cancelDownload(selItemData.dlid);
+        // delete the file if it exists
+        let file = getLocalFileFromNativePathOrUrl(selItemData.file);
+        if (file.exists())
+          file.remove(false);
         break;
       case "cmd_remove":
-        dump(aCommand + " not implemented yet!\n");
+        gDownloadManager.removeDownload(selItemData.dlid);
+        gDownloadTreeView.removeTreeRow(selIdx);
         break;
       case "cmd_open":
         openDownload(selItemData);
         break;
       case "cmd_show":
-        dump(aCommand + " not implemented yet!\n");
+        showDownload(selItemData);
         break;
       case "cmd_openReferrer":
-        dump(aCommand + " not implemented yet!\n");
+        if (selItemData.referrer)
+          openUILink(selItemData.referrer);
+        // Otherwise, open the source
+        else
+          openUILink(selItemData.uri);
         break;
       case "cmd_copyLocation":
-        dump(aCommand + " not implemented yet!\n");
+        let clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+                                  .getService(Components.interfaces.nsIClipboardHelper);
+        let uris = [];
+        for (let idx = 0; idx < m_selIdx.length; idx++) {
+          let dldata = gDownloadTreeView.getRowData(idx);
+          uris.push(dldata.uri);
+        }
+        clipboard.copyString(uris.join("\n"));
         break;
       case "cmd_selectAll":
         gDownloadTreeView.selection.selectAll();
