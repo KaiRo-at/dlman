@@ -55,7 +55,7 @@
 
 <window id="downloads-window"
         title="&downloadManager.title;" statictitle="&downloadManager.title;"
-        onload="DownloadsInit();" onunload="DownloadsShutdown();"
+        onload="dmStartup();" onunload="dmShutdown();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="500" height="400" screenX="10" screenY="10"
         persist="width height screenX screenY sizemode"
@@ -272,7 +272,7 @@
         class="plain"
         context="downloadContext"
         enableColumnDrag="true"
-        onselect="onSelect(event);">
+        onselect="onTreeSelect(event);">
     <treecols context="" onclick="sortDownloads(event.target)">
       <treecol id="Name"
                label="&view.header.name.label;"

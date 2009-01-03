@@ -47,7 +47,7 @@ let gSearchBox;
 let gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                              .getService(Components.interfaces.nsIPrefBranch);
 
-function DownloadsInit()
+function dmStartup()
 {
   gDownloadTree = document.getElementById("downloadTree");
   gDownloadStatus = document.getElementById("statusbar-display");
@@ -65,7 +65,7 @@ function DownloadsInit()
   clearListButton.controllers.appendController(dlTreeController);
 
   // Catch tree clicks so the action column can work
-  gDownloadTree.addEventListener("click", OnTreeClick, true);
+  gDownloadTree.addEventListener("click", onTreeClick, true);
 
   // The DownloadProgressListener (DownloadProgressListener.js) handles
   // progress notifications.
@@ -81,7 +81,7 @@ function DownloadsInit()
     gDownloadTree.view.selection.select(0);
 }
 
-function DownloadsShutdown()
+function dmShutdown()
 {
   gDownloadManager.removeListener(gDownloadListener);
 }
@@ -254,7 +254,7 @@ function showDownload(aDownloadData)
   }
 }
 
-function onSelect(aEvent) {
+function onTreeSelect(aEvent) {
   var selectionCount = gDownloadTreeView.selection.count;
   if (selectionCount == 1) {
     let selItemData = gDownloadTreeView.getRowData(gDownloadTree.currentIndex);
@@ -266,7 +266,7 @@ function onSelect(aEvent) {
   window.updateCommands("tree-select");
 }
 
-function OnTreeClick(aEvent)
+function onTreeClick(aEvent)
 {
   // we only care about button 0 (left click) events
   if (aEvent.button != 0) return;
