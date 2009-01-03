@@ -64,6 +64,9 @@ function DownloadsInit()
   gSearchBox.controllers.appendController(dlTreeController);
   clearListButton.controllers.appendController(dlTreeController);
 
+  // Catch tree clicks so the action column can work
+  gDownloadTree.addEventListener("click", OnTreeClick, true);
+
   // The DownloadProgressListener (DownloadProgressListener.js) handles
   // progress notifications.
   gDownloadListener = new DownloadProgressListener();
@@ -142,6 +145,37 @@ function onUpdateProgress()
 
     document.title = title;
   }
+}
+
+function pauseDownload(aDownloadID)
+{
+  gDownloadManager.pauseDownload(aDownloadID);
+}
+
+function resumeDownload(aDownloadID)
+{
+  gDownloadManager.resumeDownload(aDownloadID);
+}
+
+function retryDownload(aDownloadID)
+{
+  gDownloadManager.retryDownload(aDownloadID);
+  gDownloadTreeView.removeDownload(aDownloadID);
+}
+
+function cancelDownload(aDownloadData)
+{
+  gDownloadManager.cancelDownload(aDownloadData.dlid);
+  // delete the file if it exists
+  let file = getLocalFileFromNativePathOrUrl(aDownloadData.file);
+  if (file.exists())
+    file.remove(false);
+}
+
+function removeDownload(aDownloadID)
+{
+  gDownloadManager.removeDownload(aDownloadID);
+  gDownloadTreeView.removeDownload(aDownloadID);
 }
 
 function openDownload(aDownloadData)
@@ -230,6 +264,44 @@ function onSelect(aEvent) {
     gDownloadStatus.label = "";
 
   window.updateCommands("tree-select");
+}
+
+function OnTreeClick(aEvent)
+{
+  // we only care about button 0 (left click) events
+  if (aEvent.button != 0) return;
+
+  let tgt = aEvent.originalTarget;
+
+  if (tgt.localName == "treechildren") {
+    let row = new Object;
+    let col = new Object;
+    let childElt = new Object;
+
+    // figure out what cell the click was in
+    gDownloadTree.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY,
+                                          row, col, childElt);
+    if (row.value == -1)
+      return;
+
+    let dl;
+    if (col.value.id == "ActionPlay") {
+      dl = gDownloadTreeView.getRowData(row.value);
+      if (!dl.isActive)
+        retryDownload(dl.dlid);
+      else if (dl.state == nsIDM.DOWNLOAD_PAUSED)
+        resumeDownload(dl.dlid);
+      else if (dl.state == nsIDM.DOWNLOAD_DOWNLOADING)
+        pauseDownload(dl.dlid);
+    }
+    else if (col.value.id == "ActionStop") {
+      dl = gDownloadTreeView.getRowData(row.value);
+      if (dl.isActive)
+        cancelDownload(dl);
+      else
+        removeDownload(dl.dlid);
+    }
+  }
 }
 
 // -- copied from downloads.js: getLocalFileFromNativePathOrUrl()
@@ -383,26 +455,19 @@ let dlTreeController = {
 
     switch (aCommand) {
       case "cmd_pause":
-        gDownloadManager.pauseDownload(selItemData.dlid);
+        pauseDownload(selItemData.dlid);
         break;
       case "cmd_resume":
-        gDownloadManager.resumeDownload(selItemData.dlid);
+        resumeDownload(selItemData.dlid);
         break;
       case "cmd_retry":
-        // remove the correct index before retry creates another row
-        gDownloadTreeView.removeTreeRow(selIdx);
-        gDownloadManager.retryDownload(selItemData.dlid);
+        retryDownload(selItemData.dlid);
         break;
       case "cmd_cancel":
-        gDownloadManager.cancelDownload(selItemData.dlid);
-        // delete the file if it exists
-        let file = getLocalFileFromNativePathOrUrl(selItemData.file);
-        if (file.exists())
-          file.remove(false);
+        cancelDownload(selItemData);
         break;
       case "cmd_remove":
-        gDownloadManager.removeDownload(selItemData.dlid);
-        gDownloadTreeView.removeTreeRow(selIdx);
+        removeDownload(selItemData.dlid);
         break;
       case "cmd_open":
         openDownload(selItemData);

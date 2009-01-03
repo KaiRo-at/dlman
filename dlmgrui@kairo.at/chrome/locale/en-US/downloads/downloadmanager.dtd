@@ -14,6 +14,8 @@
 
 <!ENTITY view.header.name.label          "Name">
 <!ENTITY view.header.status.label        "Status">
+<!ENTITY view.header.actionPlay.label    "Pause/Resume/Retry">
+<!ENTITY view.header.actionStop.label    "Cancel/Remove">
 <!ENTITY view.header.progress.label      "Progress">
 <!ENTITY view.header.timeremaining.label "Time Left">
 <!ENTITY view.header.transferred.label   "Transferred">

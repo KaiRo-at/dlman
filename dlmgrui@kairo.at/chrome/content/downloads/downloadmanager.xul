@@ -37,6 +37,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://suitedlmgrui/skin/downloads/downloadmanager.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
@@ -273,15 +274,25 @@
         enableColumnDrag="true"
         onselect="onSelect(event);">
     <treecols context="" onclick="sortDownloads(event.target)">
-      <treecol id="Name" primary="true"
+      <treecol id="Name"
                label="&view.header.name.label;"
                class="sortDirectionIndicator" width="3*" flex="3"
                persist="width hidden ordinal sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
       <treecol id="Status"
                label="&view.header.status.label;"
-               class="sortDirectionIndicator" width="3*" flex="3"
+               class="sortDirectionIndicator" width="1*" flex="1"
                persist="width hidden ordinal sortActive sortDirection"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="ActionPlay" cycler="true"
+               label="&view.header.actionPlay.label;"
+               width="1*" flex="1"
+               persist="width hidden"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="ActionStop" cycler="true"
+               label="&view.header.actionStop.label;"
+               width="1*" flex="1"
+               persist="width hidden"/>
       <splitter class="tree-splitter"/>
       <treecol id="Progress" type="progressmeter"
                label="&view.header.progress.label;"

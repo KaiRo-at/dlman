@@ -74,8 +74,41 @@ DownloadTreeView.prototype = {
     return this._selection = val;
   },
 
-  getRowProperties: function(aRow, aProperties) { },
-  getCellProperties: function(aRow, aColumn, aProperties) { },
+  getRowProperties: function(aRow, aProperties) {
+    let dl = this._dlList[aRow];
+    let atomService = Components.classes["@mozilla.org/atom-service;1"]
+                                .getService(Components.interfaces.nsIAtomService);
+    // active/notActive
+    let activeAtom = atomService.getAtom(dl.isActive ? "active": "notActive");
+    aProperties.AppendElement(activeAtom);
+    // download states
+    switch (dl.state) {
+      case nsIDM.DOWNLOAD_PAUSED:
+        aProperties.AppendElement(atomService.getAtom("paused"));
+        break;
+      case nsIDM.DOWNLOAD_DOWNLOADING:
+        aProperties.AppendElement(atomService.getAtom("downloading"));
+        break;
+      case nsIDM.DOWNLOAD_FINISHED:
+        aProperties.AppendElement(atomService.getAtom("finished"));
+        break;
+      case nsIDM.DOWNLOAD_FAILED:
+        aProperties.AppendElement(atomService.getAtom("failed"));
+        break;
+      case nsIDM.DOWNLOAD_CANCELED:
+        aProperties.AppendElement(atomService.getAtom("canceled"));
+        break;
+      case nsIDM.DOWNLOAD_BLOCKED_PARENTAL: // Parental Controls
+      case nsIDM.DOWNLOAD_BLOCKED_POLICY:   // Security Zone Policy
+      case nsIDM.DOWNLOAD_DIRTY:            // possible virus/spyware
+        aProperties.AppendElement(atomService.getAtom("blocked"));
+        break;
+    }
+  },
+  getCellProperties: function(aRow, aColumn, aProperties) {
+    //append all row properties to the cell
+    this.getRowProperties(aRow, aProperties);
+  },
   getColumnProperties: function(aColumn, aProperties) { },
   isContainer: function(aRow) { return false; },
   isContainerOpen: function(aRow) { return false; },
@@ -91,7 +124,7 @@ DownloadTreeView.prototype = {
   getImageSrc: function(aRow, aColumn) {
     switch (aColumn.id) {
       case "Name":
-        return "moz-icon://" + this._dlList[aRow].file + "?size=16"
+        return "moz-icon://" + this._dlList[aRow].file + "?size=16";
     }
     return "";
   },
@@ -257,6 +290,7 @@ DownloadTreeView.prototype = {
     attrs.lastSec = Infinity;
 
     this._dlList.unshift(attrs);
+    // XXX: we should probably update the selection
     this._tree.rowCountChanged(0, 1);
   },
 
@@ -290,11 +324,13 @@ DownloadTreeView.prototype = {
     this._tree.invalidateRow(row);
   },
 
-  removeTreeRow: function(aRow) {
+  removeDownload: function(aDownloadID) {
+    let row = this._getIdxForID(aDownloadID);
     // Make sure we have an item to remove
-    if (parseInt(aRow) < 0) return;
+    if (row < 0) return;
 
-    this._dlList.splice(aRow, 1);
+    this._dlList.splice(row, 1);
+    // XXX: we should probably update the selection
     this._tree.invalidate();
 
     window.updateCommands("tree-select");
