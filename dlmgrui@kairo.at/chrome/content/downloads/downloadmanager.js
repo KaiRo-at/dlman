@@ -93,8 +93,29 @@ function searchDownloads(aInput)
 
 function sortDownloads(aEventTarget)
 {
-  dump("XXX: sort is not implemented yet!\n");
-  //gDownloadTree.load();
+  if (aEventTarget.localName != "treecol")
+    return;
+
+  if (aEventTarget.getAttribute("cycler") == "true")
+    return;
+
+  let colID = aEventTarget.getAttribute("id");
+
+  for (let node = document.getElementById("Name"); node; node = node.nextSibling) {
+    if (node.getAttribute("sortActive") == "true" && node.id != colID) {
+      node.setAttribute("sortActive", "true");
+      node.setAttribute("sortDirection", "natural");
+    }
+  }
+
+  let sortDirection = aEventTarget.getAttribute("sortDirection");
+  sortDirection = sortDirection == "ascending" ? "descending" : "ascending";
+  let direction = sortDirection == "ascending" ? 1 : -1;
+
+  gDownloadTreeView.sortView(colID, direction);
+
+  aEventTarget.setAttribute("sortActive", "true");
+  aEventTarget.setAttribute("sortDirection", sortDirection);
 }
 
 // This is called by the progress listener.

@@ -47,6 +47,7 @@ function DownloadTreeView(aDownloadManager) {
   this._selection = null;
   this._dm = aDownloadManager;
   this._dlList = [];
+  this._lastListIndex = 0;
   this._dlBundle = null;
   this._statement = null;
   this._searchTerms = [];
@@ -215,6 +216,7 @@ DownloadTreeView.prototype = {
         switch (dl.state) {
           case nsIDM.DOWNLOAD_DOWNLOADING:
             let speed = this._dm.getDownload(dl.dlid).speed;
+            this._dlList[aRow]._speed = speed; // used for sorting
             let [rate, unit] = DownloadUtils.convertByteUnits(speed);
             return this._dlbundle.getFormattedString("speedFormat", [rate, unit]);
           case nsIDM.DOWNLOAD_PAUSED:
@@ -289,6 +291,9 @@ DownloadTreeView.prototype = {
     // Init lastSec for calculations of remaining time
     attrs.lastSec = Infinity;
 
+    // prepend in natural sorting
+    attrs.listIndex = this._lastListIndex--;
+
     this._dlList.unshift(attrs);
     // XXX: we should probably update the selection
     this._tree.rowCountChanged(0, 1);
@@ -341,6 +346,7 @@ DownloadTreeView.prototype = {
     // or because we need to recreate it
     this._tree.beginUpdateBatch();
     this._dlList = [];
+    this._lastListIndex = 0;
 
     this.selection.clearSelection();
 
@@ -396,10 +402,13 @@ DownloadTreeView.prototype = {
         if (combinedSearch.search(term) == -1)
           matchSearch = false;
 
-      if (attrs.isActive || matchSearch)
+      if (attrs.isActive || matchSearch) {
+        attrs.listIndex = this._lastListIndex++;
         this._dlList.push(attrs);
+      }
     }
     this._statement.reset();
+    this._lastListIndex = 0; // we'll prepend other downloads with --!
     this._tree.endUpdateBatch();
 
     window.updateCommands("tree-select");
@@ -418,6 +427,75 @@ DownloadTreeView.prototype = {
       return;
 
     this.initTree();
+  },
+
+  sortView: function(aColumnID, aDirection) {
+    let sortAscending = aDirection > 0;
+
+    // compare function for two _dlList items
+    let compfunc = function(a, b) {
+      // active downloads are always at the beginning
+      // i.e. 0 for .isActive is larger (!) than 1
+      if (a.isActive < b.isActive)
+        return 1;
+      if (a.isActive > b.isActive)
+        return -1;
+      // same active/inactive state, sort normally
+      let comp_a = null;
+      let comp_b = null;
+      switch (aColumnID) {
+        case "Name":
+          comp_a = a.target.toLowerCase();
+          comp_b = b.target.toLowerCase();
+          break;
+        case "Status":
+          comp_a = a.state;
+          comp_b = b.state;
+          break;
+        case "Progress":
+        case "ProgressPercent":
+          // use original sorting for inactive entries
+          // use only one isActive to be sure we do the same
+          comp_a = a.isActive ? a.progress : a.listIndex;
+          comp_b = a.isActive ? b.progress : b.listIndex;
+          break;
+        case "TimeRemaining":
+          comp_a = a.isActive ? a.lastSec : a.listIndex;
+          comp_b = a.isActive ? b.lastSec : b.listIndex;
+          break;
+        case "Transferred":
+          comp_a = a.currBytes;
+          comp_b = b.currBytes;
+          break;
+        case "TransferRate":
+          comp_a = a.isActive ? a._speed : a.listIndex;
+          comp_b = a.isActive ? b._speed : b.listIndex;
+          break;
+        case "TimeElapsed":
+          comp_a = (a.endTime && a.startTime && (a.endTime > a.startTime))
+                   ? a.endTime - a.startTime
+                   : 0;
+          comp_b = (b.endTime && b.startTime && (b.endTime > b.startTime))
+                   ? b.endTime - b.startTime
+                   : 0;
+          break;
+        case "Source":
+          comp_a = a.uri;
+          comp_b = b.uri;
+          break;
+        default:
+          comp_a = a.listIndex;
+          comp_b = b.listIndex;
+      }
+      if (comp_a > comp_b)
+        return sortAscending ? 1 : -1;
+      if (comp_a < comp_b)
+        return sortAscending ? -1 : 1;
+      return 0;
+    }
+
+    this._dlList.sort(compfunc);
+    this._tree.invalidate();
   },
 
   getRowData: function(aRow) {
