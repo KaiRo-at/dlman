@@ -306,6 +306,8 @@ DownloadTreeView.prototype = {
     this._tree.beginUpdateBatch();
     this._dlList = [];
 
+    this.selection.clearSelection();
+
     this._statement = this._dm.DBConnection.createStatement(
       "SELECT id, target, name, source, state, startTime, endTime, referrer, " +
             "currBytes, maxBytes, state IN (?1, ?2, ?3, ?4, ?5) isActive " +
@@ -351,7 +353,7 @@ DownloadTreeView.prototype = {
       // Search through the download attributes that are shown to the user and
       // make it into one big string for easy combined searching
       // XXX: toolkit uses the target, status and dateTime attributes of the XBL item
-      let combinedSearch = attrs.target.toLowerCase() + " " + attrs.file.toLowerCase();
+      let combinedSearch = attrs.file.toLowerCase() + " " + attrs.uri.toLowerCase();
 
       let matchSearch = true;
       for each (let term in this._searchTerms)

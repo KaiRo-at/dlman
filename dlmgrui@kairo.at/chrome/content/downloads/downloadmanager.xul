@@ -152,7 +152,7 @@
                 label="&cmd.remove.label;"
                 accesskey="&cmd.remove.accesskey;"
                 command="cmd_remove"/>
-      <menuseparator id="dlContext-separator1"/>
+      <menuseparator/>
       <menuitem id="dlContext-open"
                 label="&cmd.open.label;"
                 accesskey="&cmd.open.accesskey;"
@@ -179,12 +179,25 @@
              chromedir="&locale.dir;">
       <menu id="menu_File">
         <menupopup id="menu_FilePopup">
+          <menuitem id="dlMenu_open"
+                    label="&cmd.open.label;"
+                    accesskey="&cmd.open.accesskey;"
+                    command="cmd_open"/>
+          <menuitem id="dlMenu_show"
+                    label="&cmd.show.label;"
+                    accesskey="&cmd.show.accesskey;"
+                    command="cmd_show"/>
+          <menuitem id="dlMenu_openReferrer"
+                    label="&cmd.goToDownloadPage.label;"
+                    accesskey="&cmd.goToDownloadPage.accesskey;"
+                    command="cmd_openReferrer"/>
+          <menuseparator/>
           <menuitem id="menu_close"/>
         </menupopup>
       </menu>
 
       <menu id="menu_Edit">
-        <menupopup>
+        <menupopup id="menu_EditPopup">
           <menuitem id="dlMenu_pause"
                     label="&cmd.pause.label;"
                     accesskey="&cmd.pause.accesskey;"
@@ -201,10 +214,15 @@
                     label="&cmd.cancel.label;"
                     accesskey="&cmd.cancel.accesskey;"
                     command="cmd_cancel"/>
+          <menuseparator/>
           <menuitem id="dlMenu_remove"
                     label="&cmd.remove.label;"
                     accesskey="&cmd.remove.accesskey;"
                     command="cmd_remove"/>
+          <menuitem id="dlMenu_copyLocation"
+                    label="&cmd.copyDownloadLink.label;"
+                    accesskey="&cmd.copyDownloadLink.accesskey;"
+                    command="cmd_copyLocation"/>
           <menuseparator/>
           <menuitem id="dlMenu_clearList"
                     label="&cmd.clearList.label;"
@@ -213,7 +231,20 @@
           <menuitem id="menu_selectAll"/>
         </menupopup>
       </menu>
-      <menu id="tasksMenu"/>
+      <menu id="menu_View">
+        <menupopup id="menu_ViewPopup">
+        </menupopup>
+      </menu>
+      <menu id="tasksMenu">
+        <menupopup id="taskPopup">
+          <menuitem id="dlMenu_find"
+                    label="&search.label;"
+                    accesskey="&search.accesskey;"
+                    command="cmd_search_focus"
+                    key="key_search_focus"/>
+          <menuseparator/>
+        </menupopup>
+      </menu>
       <menu id="windowMenu"/>
       <menu id="menu_Help"/>
     </menubar>

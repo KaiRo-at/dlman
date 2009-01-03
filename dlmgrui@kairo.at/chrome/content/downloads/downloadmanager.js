@@ -389,8 +389,9 @@ let dlTreeController = {
         gDownloadManager.resumeDownload(selItemData.dlid);
         break;
       case "cmd_retry":
-        gDownloadManager.retryDownload(selItemData.dlid);
+        // remove the correct index before retry creates another row
         gDownloadTreeView.removeTreeRow(selIdx);
+        gDownloadManager.retryDownload(selItemData.dlid);
         break;
       case "cmd_cancel":
         gDownloadManager.cancelDownload(selItemData.dlid);
