@@ -179,10 +179,16 @@ DownloadTreeView.prototype = {
       case "Transferred":
         return DownloadUtils.getTransferTotal(dl.currBytes, dl.maxBytes);
       case "TransferRate":
-        if (dl.state == nsIDM.DOWNLOAD_DOWNLOADING) {
-          let speed = this._dm.getDownload(dl.dlid).speed;
-          let [rate, unit] = DownloadUtils.convertByteUnits(speed);
-          return this._dlbundle.getFormattedString("speedFormat", [rate, unit]);
+        switch (dl.state) {
+          case nsIDM.DOWNLOAD_DOWNLOADING:
+            let speed = this._dm.getDownload(dl.dlid).speed;
+            let [rate, unit] = DownloadUtils.convertByteUnits(speed);
+            return this._dlbundle.getFormattedString("speedFormat", [rate, unit]);
+          case nsIDM.DOWNLOAD_PAUSED:
+            return this._dlbundle.getString("paused");
+          case nsIDM.DOWNLOAD_NOTSTARTED:
+          case nsIDM.DOWNLOAD_QUEUED:
+            return this._dlbundle.getString("notStarted");
         }
         return "";
       case "TimeElapsed":
