@@ -108,6 +108,8 @@
                oncommand="goDoCommand('cmd_openReferrer');"/>
       <command id="cmd_copyLocation"
                oncommand="goDoCommand('cmd_copyLocation');"/>
+      <command id="cmd_clearList"
+               oncommand="goDoCommand('cmd_clearList');"/>
     </commandset>
   </commandset>
 
@@ -204,6 +206,10 @@
                     accesskey="&cmd.remove.accesskey;"
                     command="cmd_remove"/>
           <menuseparator/>
+          <menuitem id="dlMenu_clearList"
+                    label="&cmd.clearList.label;"
+                    accesskey="&cmd.clearList.accesskey;"
+                    command="cmd_clearList"/>
           <menuitem id="menu_selectAll"/>
         </menupopup>
       </menu>
@@ -235,7 +241,7 @@
         context="downloadContext"
         enableColumnDrag="true"
         onselect="onSelect(event);">
-    <treecols context="" onclick="doSort(event.target)">
+    <treecols context="" onclick="sortDownloads(event.target)">
       <treecol id="Name" primary="true"
                label="&view.header.name.label;"
                class="sortDirectionIndicator" width="3*" flex="3"

@@ -52,14 +52,20 @@ function DownloadsInit()
   gDownloadTree = document.getElementById("downloadTree");
   gDownloadStatus = document.getElementById("statusbar-display");
   gSearchBox = document.getElementById("search-box");
+  let clearListButton = document.getElementById("clearListButton");
 
+  // We need to keep the oview object around globally to access "local"
+  // non-nsITreeView methods
   gDownloadTreeView = new DownloadTreeView(gDownloadManager);
   gDownloadTree.view = gDownloadTreeView;
 
+  // Append controller on all our interactive controls
   gDownloadTree.controllers.appendController(dlTreeController);
+  gSearchBox.controllers.appendController(dlTreeController);
+  clearListButton.controllers.appendController(dlTreeController);
 
-  // The DownloadProgressListener (DownloadProgressListener.js) handles progress
-  // notifications.
+  // The DownloadProgressListener (DownloadProgressListener.js) handles
+  // progress notifications.
   gDownloadListener = new DownloadProgressListener();
   gDownloadManager.addListener(gDownloadListener);
 
@@ -79,6 +85,12 @@ function DownloadsShutdown()
 
 function searchDownloads(aInput)
 {
+  gDownloadTreeView.searchView(aInput);
+}
+
+function sortDownloads(aEventTarget)
+{
+  dump("XXX: sort is not implemented yet!\n");
   //gDownloadTree.load();
 }
 
@@ -172,7 +184,7 @@ function openDownload(aDownloadData)
   try {
     file.launch();
   } catch (ex) {
-    // if launch fails, try sending it through the system's external
+    // If launch fails, try sending it through the system's external
     // file: URL handler
     let uri = Components.classes["@mozilla.org/network/io-service;1"]
                         .getService(Components.interfaces.nsIIOService)
@@ -275,6 +287,7 @@ let dlTreeController = {
       case "cmd_openReferrer":
       case "cmd_copyLocation":
       case "cmd_selectAll":
+      case "cmd_clearList":
         return true;
     }
     return false;
@@ -282,11 +295,18 @@ let dlTreeController = {
 
   isCommandEnabled: function(aCommand)
   {
-    if (!gDownloadTreeView || !gDownloadTreeView.selection) return false;
-    let selectionCount = gDownloadTreeView.selection.count;
-    if (!selectionCount) return false;
+    // we can even enable some commands when we have no selection
+    let ignoreSelection = (aCommand == "cmd_selectAll" ||
+                           aCommand == "cmd_clearList");
 
-    let selItemData = gDownloadTreeView.getRowData(gDownloadTree.currentIndex);
+    let selectionCount = 0;
+    if (gDownloadTreeView && gDownloadTreeView.selection)
+      selectionCount = gDownloadTreeView.selection.count;
+    if (!ignoreSelection && !selectionCount) return false;
+
+    let selItemData = selectionCount
+                      ? gDownloadTreeView.getRowData(gDownloadTree.currentIndex)
+                      : null;
 
     let download = null; // used for getting an nsIDownload object
 
@@ -328,13 +348,21 @@ let dlTreeController = {
         return true;
       case "cmd_selectAll":
         return gDownloadTreeView.rowCount != selectionCount;
+      case "cmd_clearList":
+        return gDownloadTreeView.rowCount > 0;
       default:
         return false;
     }
   },
 
   doCommand: function(aCommand){
-    let selectionCount = gDownloadTreeView.selection.count;
+    // we can even enable some commands when we have no selection
+    let ignoreSelection = (aCommand == "cmd_selectAll" ||
+                           aCommand == "cmd_clearList");
+
+    let selectionCount = 0;
+    if (gDownloadTreeView && gDownloadTreeView.selection)
+      selectionCount = gDownloadTreeView.selection.count;
     let selIdx = selectionCount == 1 ? gDownloadTree.currentIndex : -1;
     let selItemData = selectionCount == 1 ? gDownloadTreeView.getRowData(selIdx) : null;
 
@@ -401,6 +429,29 @@ let dlTreeController = {
       case "cmd_selectAll":
         gDownloadTreeView.selection.selectAll();
         break;
+      case "cmd_clearList":
+        // Clear the whole list if there's no search
+        if (gSearchBox.value == "") {
+          gDownloadManager.cleanUp();
+          gDownloadTreeView.initTree();
+          return;
+        }
+
+        // Remove each download starting from the end until we hit a download
+        // that is in progress
+        for (let idx = m_selIdx.length - 1; idx >= 0; idx--) {
+          let dldata = gDownloadTreeView.getRowData(idx);
+          if (!dldata.isActive) {
+            gDownloadManager.removeDownload(dldata.dlid);
+            gDownloadTreeView.removeTreeRow(idx);
+          }
+        }
+
+        // Clear the input as if the user did it and move focus to the list
+        gSearchBox.value = "";
+        gSearchBox.doCommand();
+        gDownloadTree.focus();
+        break;
     }
   },
 
@@ -412,8 +463,9 @@ let dlTreeController = {
   },
 
   onCommandUpdate: function() {
-    let cmds = ["cmd_pause", "cmd_resume", "cmd_retry", "cmd_cancel", "cmd_remove",
-                "cmd_open", "cmd_show", "cmd_openReferrer", "cmd_copyLocation"];
+    let cmds = ["cmd_pause", "cmd_resume", "cmd_retry", "cmd_cancel",
+                "cmd_remove", "cmd_open", "cmd_show", "cmd_openReferrer",
+                "cmd_copyLocation", "cmd_selectAll", "cmd_clearList"];
     for (let command in cmds)
       goUpdateCommand(cmds[command]);
   }

@@ -48,7 +48,8 @@ function DownloadTreeView(aDownloadManager) {
   this._dm = aDownloadManager;
   this._dlList = [];
   this._dlBundle = null;
-  this._satement = null;
+  this._statement = null;
+  this._searchTerms = [];
 }
 
 DownloadTreeView.prototype = {
@@ -60,7 +61,7 @@ DownloadTreeView.prototype = {
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
 
-  // nsITreeView attributes
+  // ***** nsITreeView attributes and methods *****
   get rowCount() {
     return this._dlList.length;
   },
@@ -73,7 +74,6 @@ DownloadTreeView.prototype = {
     return this._selection = val;
   },
 
-  // nsITreeView methods
   getRowProperties: function(aRow, aProperties) { },
   getCellProperties: function(aRow, aColumn, aProperties) { },
   getColumnProperties: function(aColumn, aProperties) { },
@@ -211,54 +211,7 @@ DownloadTreeView.prototype = {
     this._tree = aTree;
     this._dlbundle = document.getElementById("dmBundle");
 
-    this._statement = this._dm.DBConnection.createStatement(
-      "SELECT id, target, name, source, state, startTime, endTime, referrer, " +
-            "currBytes, maxBytes, state IN (?1, ?2, ?3, ?4, ?5) isActive " +
-      "FROM moz_downloads " +
-      "ORDER BY isActive DESC, endTime DESC, startTime DESC");
-
-    this._statement.bindInt32Parameter(0, nsIDM.DOWNLOAD_NOTSTARTED);
-    this._statement.bindInt32Parameter(1, nsIDM.DOWNLOAD_DOWNLOADING);
-    this._statement.bindInt32Parameter(2, nsIDM.DOWNLOAD_PAUSED);
-    this._statement.bindInt32Parameter(3, nsIDM.DOWNLOAD_QUEUED);
-    this._statement.bindInt32Parameter(4, nsIDM.DOWNLOAD_SCANNING);
-
-    while (this._statement.executeStep()) {
-      // Try to get the attribute values from the statement
-      let attrs = {
-        dlid: this._statement.getInt64(0),
-        file: this._statement.getString(1),
-        target: this._statement.getString(2),
-        uri: this._statement.getString(3),
-        state: this._statement.getInt32(4),
-        startTime: Math.round(this._statement.getInt64(5) / 1000),
-        endTime: Math.round(this._statement.getInt64(6) / 1000),
-        currBytes: this._statement.getInt64(8),
-        maxBytes: this._statement.getInt64(9)
-      };
-
-      // Only add the referrer if it's not null
-      let (referrer = this._statement.getString(7)) {
-        if (referrer)
-          attrs.referrer = referrer;
-      }
-
-      // If the download is active, grab the real progress, otherwise default 100
-      attrs.isActive = this._statement.getInt32(10);
-      attrs.progress = attrs.isActive
-                         ? this._dm.getDownload(attrs.dlid).percentComplete
-                         : 100;
-      // init lastSec for calculations of remaining time
-      attrs.lastSec = Infinity;
-
-      this._dlList.push(attrs);
-    }
-    this._statement.reset();
-    // Send a notification that we finished, but wait for clear list to update
-    //  updateClearListButton();
-    //  setTimeout(function() Cc["@mozilla.org/observer-service;1"].
-    //    getService(Ci.nsIObserverService).
-    //    notifyObservers(window, "download-manager-ui-done", null), 0);
+    this.initTree();
   },
 
   toggleOpenState: function(aRow) { },
@@ -273,7 +226,7 @@ DownloadTreeView.prototype = {
   performActionOnRow: function(aAction, aRow) { },
   performActionOnCell: function(aAction, aRow, aColumn) { },
 
-  // local public methods
+  // ***** local public methods *****
 
   addDownload: function(aDownload) {
     let attrs = {
@@ -300,7 +253,7 @@ DownloadTreeView.prototype = {
         attrs.isActive = 0;
         break;
     }
-    // init lastSec for calculations of remaining time
+    // Init lastSec for calculations of remaining time
     attrs.lastSec = Infinity;
 
     this._dlList.unshift(attrs);
@@ -347,13 +300,95 @@ DownloadTreeView.prototype = {
     window.updateCommands("tree-select");
   },
 
+  initTree: function() {
+    // We're resetting the whole list, either because we're creating the tree
+    // or because we need to recreate it
+    this._tree.beginUpdateBatch();
+    this._dlList = [];
+
+    this._statement = this._dm.DBConnection.createStatement(
+      "SELECT id, target, name, source, state, startTime, endTime, referrer, " +
+            "currBytes, maxBytes, state IN (?1, ?2, ?3, ?4, ?5) isActive " +
+      "FROM moz_downloads " +
+      "ORDER BY isActive DESC, endTime DESC, startTime DESC");
+
+    this._statement.bindInt32Parameter(0, nsIDM.DOWNLOAD_NOTSTARTED);
+    this._statement.bindInt32Parameter(1, nsIDM.DOWNLOAD_DOWNLOADING);
+    this._statement.bindInt32Parameter(2, nsIDM.DOWNLOAD_PAUSED);
+    this._statement.bindInt32Parameter(3, nsIDM.DOWNLOAD_QUEUED);
+    this._statement.bindInt32Parameter(4, nsIDM.DOWNLOAD_SCANNING);
+
+    while (this._statement.executeStep()) {
+      // Try to get the attribute values from the statement
+      let attrs = {
+        dlid: this._statement.getInt64(0),
+        file: this._statement.getString(1),
+        target: this._statement.getString(2),
+        uri: this._statement.getString(3),
+        state: this._statement.getInt32(4),
+        startTime: Math.round(this._statement.getInt64(5) / 1000),
+        endTime: Math.round(this._statement.getInt64(6) / 1000),
+        currBytes: this._statement.getInt64(8),
+        maxBytes: this._statement.getInt64(9)
+      };
+
+      // Only add the referrer if it's not null
+      let (referrer = this._statement.getString(7)) {
+        if (referrer)
+          attrs.referrer = referrer;
+      }
+
+      // If the download is active, grab the real progress, otherwise default 100
+      attrs.isActive = this._statement.getInt32(10);
+      attrs.progress = attrs.isActive
+                         ? this._dm.getDownload(attrs.dlid).percentComplete
+                         : 100;
+      // Init lastSec for calculations of remaining time
+      attrs.lastSec = Infinity;
+
+      // Only actually add item to the tree if it's active or matching search
+
+      // Search through the download attributes that are shown to the user and
+      // make it into one big string for easy combined searching
+      // XXX: toolkit uses the target, status and dateTime attributes of the XBL item
+      let combinedSearch = attrs.target.toLowerCase() + " " + attrs.file.toLowerCase();
+
+      let matchSearch = true;
+      for each (let term in this._searchTerms)
+        if (combinedSearch.search(term) == -1)
+          matchSearch = false;
+
+      if (attrs.isActive || matchSearch)
+        this._dlList.push(attrs);
+    }
+    this._statement.reset();
+    this._tree.endUpdateBatch();
+
+    window.updateCommands("tree-select");
+  },
+
+  searchView: function(aInput) {
+    // Stringify the previous search
+    let prevSearch = this._searchTerms.join(" ");
+
+    // Array of space-separated lower-case search terms
+    this._searchTerms = aInput.replace(/^\s+|\s+$/g, "")
+                              .toLowerCase().split(/\s+/);
+
+    // Don't rebuild the download list if the search didn't change
+    if (this._searchTerms.join(" ") == prevSearch)
+      return;
+
+    this.initTree();
+  },
+
   getRowData: function(aRow) {
     return this._dlList[aRow];
   },
 
-  // local helper functions
+  // ***** local helper functions *****
 
-  // get array index in _dlList for a given download ID
+  // Get array index in _dlList for a given download ID
   _getIdxForID: function(aDlID) {
     let len = this._dlList.length;
     for (let idx = 0; idx < len; idx++) {
