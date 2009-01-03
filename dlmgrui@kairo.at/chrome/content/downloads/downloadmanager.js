@@ -287,12 +287,18 @@ function onTreeClick(aEvent)
     let dl;
     if (col.value.id == "ActionPlay") {
       dl = gDownloadTreeView.getRowData(row.value);
-      if (!dl.isActive)
-        retryDownload(dl.dlid);
-      else if (dl.state == nsIDM.DOWNLOAD_PAUSED)
-        resumeDownload(dl.dlid);
-      else if (dl.state == nsIDM.DOWNLOAD_DOWNLOADING)
-        pauseDownload(dl.dlid);
+      switch (dl.state) {
+        case nsIDM.DOWNLOAD_DOWNLOADING:
+          pauseDownload(dl.dlid);
+          break;
+        case nsIDM.DOWNLOAD_PAUSED:
+          resumeDownload(dl.dlid);
+          break;
+        case nsIDM.DOWNLOAD_FAILED:
+        case nsIDM.DOWNLOAD_CANCELED:
+          retryDownload(dl.dlid);
+          break;
+      }
     }
     else if (col.value.id == "ActionStop") {
       dl = gDownloadTreeView.getRowData(row.value);
@@ -406,14 +412,12 @@ let dlTreeController = {
         // XXX handling multiple selection would be nice
         return selectionCount == 1 && selItemData.isActive;
       case "cmd_retry":
-      case "cmd_remove":
         return selectionCount == 1 &&
-               (selItemData.state == nsIDM.DOWNLOAD_FINISHED ||
-                selItemData.state == nsIDM.DOWNLOAD_CANCELED ||
-                selItemData.state == nsIDM.DOWNLOAD_BLOCKED_PARENTAL ||
-                selItemData.state == nsIDM.DOWNLOAD_BLOCKED_POLICY ||
-                selItemData.state == nsIDM.DOWNLOAD_DIRTY ||
+               (selItemData.state == nsIDM.DOWNLOAD_CANCELED ||
                 selItemData.state == nsIDM.DOWNLOAD_FAILED);
+      case "cmd_remove":
+        // XXX handling multiple selection would be nice
+        return selectionCount == 1 && !selItemData.isActive;
       case "cmd_openReferrer":
         return selectionCount == 1 && !!selItemData.referrer;
       case "cmd_copyLocation":
