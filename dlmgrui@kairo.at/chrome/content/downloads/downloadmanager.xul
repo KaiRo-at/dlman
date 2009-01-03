@@ -287,12 +287,12 @@
       <treecol id="ActionPlay" cycler="true"
                label="&view.header.actionPlay.label;"
                width="1*" flex="1"
-               persist="width hidden"/>
+               persist="width hidden ordinal"/>
       <splitter class="tree-splitter"/>
       <treecol id="ActionStop" cycler="true"
                label="&view.header.actionStop.label;"
                width="1*" flex="1"
-               persist="width hidden"/>
+               persist="width hidden ordinal"/>
       <splitter class="tree-splitter"/>
       <treecol id="Progress" type="progressmeter"
                label="&view.header.progress.label;"
