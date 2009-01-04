@@ -409,6 +409,12 @@ DownloadTreeView.prototype = {
     }
     this._statement.reset();
     this._lastListIndex = 0; // we'll prepend other downloads with --!
+    // find sorted column and sort the tree
+    let sortedColumn = this._tree.columns.getSortedColumn();
+    if (sortedColumn) {
+      let direction = sortedColumn.element.getAttribute("sortDirection");
+      this.sortView(sortedColumn.id, direction);
+    }
     this._tree.endUpdateBatch();
 
     window.updateCommands("tree-select");
@@ -430,7 +436,7 @@ DownloadTreeView.prototype = {
   },
 
   sortView: function(aColumnID, aDirection) {
-    let sortAscending = aDirection > 0;
+    let sortAscending = aDirection == "ascending";
 
     // compare function for two _dlList items
     let compfunc = function(a, b) {

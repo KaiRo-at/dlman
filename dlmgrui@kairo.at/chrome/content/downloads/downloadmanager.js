@@ -93,78 +93,64 @@ function searchDownloads(aInput)
 
 function sortDownloads(aEventTarget)
 {
-  if (aEventTarget.localName != "treecol")
+  let column = aEventTarget;
+  let colID = column.getAttribute("id");
+  let sortDirection = null;
+
+  // If the target is a menuitem, handle it and forward to a column
+  if (colID.match(/^menu_SortBy/)) {
+    colID = colID.replace(/^menu_SortBy/, "");
+    column = document.getElementById(colID);
+    sortDirection = document.getElementById("menu_SortAscending").checked
+                    ? "ascending"
+                    : "descending";
+  }
+  else if (colID == "menu_Unsorted") {
+    // calling .sortView() with an empty colID returns us to original order
+    colID = "";
+    column = null;
+    sortDirection = "ascending";
+  }
+  else if (colID == "menu_SortAscending" || colID == "menu_SortDescending") {
+    sortDirection = colID.replace(/^menu_Sort/, "").toLowerCase();
+    for (let node = document.getElementById("Name"); node; node = node.nextSibling) {
+      if (node.getAttribute("sortActive") == "true") {
+        colID = node.id;
+        column = node;
+      }
+    }
+  }
+
+  // Abort if this is still no column
+  if (colID != "" && column.localName != "treecol")
     return;
 
-  if (aEventTarget.getAttribute("cycler") == "true")
+  // Abort on cyler columns, we don't sort them
+  if (colID != "" && column.getAttribute("cycler") == "true")
     return;
 
-  let colID = aEventTarget.getAttribute("id");
-
+  // Clear attributes on previously sorted column
   for (let node = document.getElementById("Name"); node; node = node.nextSibling) {
-    if (node.getAttribute("sortActive") == "true" && node.id != colID) {
-      node.setAttribute("sortActive", "true");
-      node.setAttribute("sortDirection", "natural");
-    }
+    if (node.getAttribute("sortActive") == "true" && node.id != colID)
+      node.removeAttribute("sortActive");
+    if (node.getAttribute("sortDirection") && node.id != colID)
+      node.removeAttribute("sortDirection");
   }
 
-  let sortDirection = aEventTarget.getAttribute("sortDirection");
-  sortDirection = sortDirection == "ascending" ? "descending" : "ascending";
-  let direction = sortDirection == "ascending" ? 1 : -1;
-
-  gDownloadTreeView.sortView(colID, direction);
-
-  aEventTarget.setAttribute("sortActive", "true");
-  aEventTarget.setAttribute("sortDirection", sortDirection);
-}
-
-// This is called by the progress listener.
-let gLastComputedMean = -1;
-let gLastActiveDownloads = 0;
-function onUpdateProgress()
-{
-  let numActiveDownloads = gDownloadManager.activeDownloadCount;
-
-  // Use the default title and reset "last" values if there's no downloads
-  if (numActiveDownloads == 0) {
-    document.title = document.documentElement.getAttribute("statictitle");
-    gLastComputedMean = -1;
-    gLastActiveDownloads = 0;
-
-    return;
+  if (!sortDirection) {
+    // If not set above already, toggle the current direction
+    sortDirection = column.getAttribute("sortDirection") == "ascending"
+                    ? "descending"
+                    : "ascending";
   }
 
-  // Establish the mean transfer speed and amount downloaded.
-  let mean = 0;
-  let base = 0;
-  let dls = gDownloadManager.activeDownloads;
-  while (dls.hasMoreElements()) {
-    let dl = dls.getNext().QueryInterface(Components.interfaces.nsIDownload);
-    if (dl.percentComplete < 100 && dl.size > 0) {
-      mean += dl.amountTransferred;
-      base += dl.size;
-    }
-  }
+  // Actuall sort the tree view
+  gDownloadTreeView.sortView(colID, sortDirection);
 
-  // Calculate the percent transferred, unless we don't have a total file size
-  let dlbundle = document.getElementById("dmBundle");
-  let title = dlbundle.getString("downloadsTitlePercent");
-  if (base == 0)
-    title = dlbundle.getString("downloadsTitleFiles");
-  else
-    mean = Math.floor((mean / base) * 100);
-
-  // Update title of window
-  if (mean != gLastComputedMean || gLastActiveDownloads != numActiveDownloads) {
-    gLastComputedMean = mean;
-    gLastActiveDownloads = numActiveDownloads;
-
-    // Get the correct plural form and insert number of downloads and percent
-    title = PluralForm.get(numActiveDownloads, title);
-    title = replaceInsert(title, 1, numActiveDownloads);
-    title = replaceInsert(title, 2, mean);
-
-    document.title = title;
+  if (colID) {
+    // Set attributes to the sorting we did
+    column.setAttribute("sortActive", "true");
+    column.setAttribute("sortDirection", sortDirection);
   }
 }
 
@@ -328,6 +314,111 @@ function onTreeClick(aEvent)
       else
         removeDownload(dl.dlid);
     }
+  }
+}
+
+function onUpdateViewColumns(aMenuItem)
+{
+  while (aMenuItem) {
+    // Each menuitem should be checked if its column is not hidden.
+    let colID = aMenuItem.id.replace(/^menu_Toggle/, "");
+    let column = document.getElementById(colID);
+    aMenuItem.setAttribute("checked", !column.hidden);
+    aMenuItem = aMenuItem.nextSibling;
+  }
+}
+
+function toggleColumn(aMenuItem)
+{
+  let colID = aMenuItem.id.replace(/^menu_Toggle/, "");
+  var column = document.getElementById(colID);
+  column.setAttribute("hidden", !column.hidden);
+}
+
+function onUpdateViewSort(aMenuItem)
+{
+  let unsorted = true;
+  let ascending = true;
+  while (aMenuItem) {
+    switch (aMenuItem.id) {
+      case "": // separator
+        break;
+      case "menu_Unsorted":
+        if (unsorted) // this would work even if Unsorted was last
+          aMenuItem.setAttribute("checked", "true");
+        break;
+      case "menu_SortAscending":
+        aMenuItem.setAttribute("disabled", unsorted);
+        if (!unsorted && ascending)
+          aMenuItem.setAttribute("checked", "true");
+        break;
+      case "menu_SortDescending":
+        aMenuItem.setAttribute("disabled", unsorted);
+        if (!unsorted && !ascending)
+          aMenuItem.setAttribute("checked", "true");
+        break;
+      default:
+        let colID = aMenuItem.id.replace(/^menu_SortBy/, "");
+        let column = document.getElementById(colID);
+        let direction = column.getAttribute("sortDirection");
+        if (column.getAttribute("sortActive") == "true" && direction) {
+          // We've found a sorted column. Remember its direction.
+          ascending = direction == "ascending";
+          unsorted = false;
+          aMenuItem.setAttribute("checked", "true");
+        }
+    }
+    aMenuItem = aMenuItem.nextSibling;
+  }
+}
+
+// This is called by the progress listener.
+let gLastComputedMean = -1;
+let gLastActiveDownloads = 0;
+function onUpdateProgress()
+{
+  let numActiveDownloads = gDownloadManager.activeDownloadCount;
+
+  // Use the default title and reset "last" values if there's no downloads
+  if (numActiveDownloads == 0) {
+    document.title = document.documentElement.getAttribute("statictitle");
+    gLastComputedMean = -1;
+    gLastActiveDownloads = 0;
+
+    return;
+  }
+
+  // Establish the mean transfer speed and amount downloaded.
+  let mean = 0;
+  let base = 0;
+  let dls = gDownloadManager.activeDownloads;
+  while (dls.hasMoreElements()) {
+    let dl = dls.getNext().QueryInterface(Components.interfaces.nsIDownload);
+    if (dl.percentComplete < 100 && dl.size > 0) {
+      mean += dl.amountTransferred;
+      base += dl.size;
+    }
+  }
+
+  // Calculate the percent transferred, unless we don't have a total file size
+  let dlbundle = document.getElementById("dmBundle");
+  let title = dlbundle.getString("downloadsTitlePercent");
+  if (base == 0)
+    title = dlbundle.getString("downloadsTitleFiles");
+  else
+    mean = Math.floor((mean / base) * 100);
+
+  // Update title of window
+  if (mean != gLastComputedMean || gLastActiveDownloads != numActiveDownloads) {
+    gLastComputedMean = mean;
+    gLastActiveDownloads = numActiveDownloads;
+
+    // Get the correct plural form and insert number of downloads and percent
+    title = PluralForm.get(numActiveDownloads, title);
+    title = replaceInsert(title, 1, numActiveDownloads);
+    title = replaceInsert(title, 2, mean);
+
+    document.title = title;
   }
 }
 
