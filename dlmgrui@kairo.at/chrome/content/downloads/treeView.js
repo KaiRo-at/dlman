@@ -472,13 +472,11 @@ DownloadTreeView.prototype = {
 
   sortView: function(aColumnID, aDirection) {
     let sortAscending = aDirection == "ascending";
-    let restoreSelection = false;
 
     if (aColumnID == "" && aDirection == "" && this._listSortCol != "") {
       // Re-sort in already selected/cached order
       aColumnID = this._listSortCol;
       sortAscending = this._listSortAsc;
-      let restoreSelection = true;
     }
 
     // Compare function for two _dlList items
