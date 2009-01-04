@@ -37,6 +37,11 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+#ActionPlay {
+  list-style-image: url("chrome://mozapps/skin/downloads/downloadButtons.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
 treechildren::-moz-tree-image(ActionPlay) {
   list-style-image: none;
   -moz-image-region: auto;
@@ -61,6 +66,11 @@ treechildren::-moz-tree-image(ActionPlay, canceled) {
   -moz-image-region: rect(0px, 64px, 16px, 48px);
 }
 
+#ActionStop {
+  list-style-image: url("chrome://mozapps/skin/downloads/downloadButtons.png");
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
 treechildren::-moz-tree-image(ActionStop) {
   list-style-image: none;
   -moz-image-region: auto;
@@ -73,7 +83,7 @@ treechildren::-moz-tree-image(ActionStop, active) {
 }
 
 treechildren::-moz-tree-image(ActionStop, notActive) {
-  /* cancel */
+  /* remove */
   list-style-image: url("chrome://suitedlmgrui/skin/downloads/dl-remove.png");
   -moz-image-region: auto;
 }

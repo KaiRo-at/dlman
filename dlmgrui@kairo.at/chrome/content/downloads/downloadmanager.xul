@@ -360,57 +360,68 @@
     <treecols context="" onclick="sortDownloads(event.target)">
       <treecol id="Name"
                label="&col.name.label;"
-               class="sortDirectionIndicator" width="3*" flex="3"
+               tooltiptext="&col.name.tooltip;"
+               class="sortDirectionIndicator" flex="3"
                persist="width hidden ordinal sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
-      <treecol id="Status"
+      <treecol id="Status" hidden="true"
                label="&col.status.label;"
-               class="sortDirectionIndicator" width="1*" flex="1"
+               tooltiptext="&col.status.tooltip;"
+               class="sortDirectionIndicator" flex="1"
                persist="width hidden ordinal sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
       <treecol id="ActionPlay" cycler="true"
                label="&col.actionPlay.label;"
-               width="1*" flex="1"
-               persist="width hidden ordinal"/>
+               tooltiptext="&col.actionPlay.tooltip;"
+               class="treecol-image" fixed="true"
+               persist="hidden ordinal"/>
       <splitter class="tree-splitter"/>
       <treecol id="ActionStop" cycler="true"
                label="&col.actionStop.label;"
-               width="1*" flex="1"
-               persist="width hidden ordinal"/>
+               tooltiptext="&col.actionStop.tooltip;"
+               class="treecol-image" fixed="true"
+               persist="hidden ordinal"/>
       <splitter class="tree-splitter"/>
       <treecol id="Progress" type="progressmeter"
                label="&col.progress.label;"
-               class="sortDirectionIndicator" width="3*" flex="3"
+               tooltiptext="&col.progress.tooltip;"
+               class="sortDirectionIndicator" flex="3"
                persist="width hidden ordinal sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
       <treecol id="ProgressPercent" hidden="true"
                label="&col.progresstext.label;"
-               class="sortDirectionIndicator" width="1*" flex="1"
+               tooltiptext="&col.progresstext.tooltip;"
+               class="sortDirectionIndicator" flex="1"
                persist="width hidden ordinal sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
       <treecol id="TimeRemaining"
                label="&col.timeremaining.label;"
-               class="sortDirectionIndicator" width="1*" flex="1"
+               tooltiptext="&col.timeremaining.tooltip;"
+               class="sortDirectionIndicator" flex="1"
                persist="width hidden ordinal sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
       <treecol id="Transferred"
                label="&col.transferred.label;"
-               class="sortDirectionIndicator" width="1*" flex="1"
+               tooltiptext="&col.transferred.tooltip;"
+               class="sortDirectionIndicator" flex="1"
                persist="width hidden ordinal sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
       <treecol id="TransferRate"
                label="&col.transferrate.label;"
-               class="sortDirectionIndicator" width="1*" flex="1"
+               tooltiptext="&col.transferrate.tooltip;"
+               class="sortDirectionIndicator" flex="1"
                persist="width hidden ordinal sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
       <treecol id="TimeElapsed" hidden="true"
                label="&col.timeelapsed.label;"
-               class="sortDirectionIndicator" width="1*" flex="1"
+               tooltiptext="&col.timeelapsed.tooltip;"
+               class="sortDirectionIndicator" flex="1"
                persist="width hidden ordinal sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
       <treecol id="Source" hidden="true"
                label="&col.source.label;"
-               class="sortDirectionIndicator" width="1*" flex="1"
+               tooltiptext="&col.source.tooltip;"
+               class="sortDirectionIndicator" flex="1"
                persist="width hidden ordinal sortActive sortDirection"/>
     </treecols>
     <treechildren/>

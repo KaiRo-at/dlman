@@ -14,26 +14,37 @@
 
 <!ENTITY col.name.label                  "Name">
 <!ENTITY col.name.accesskey              "N">
+<!ENTITY col.name.tooltip                "File Name">
 <!ENTITY col.status.label                "Status">
 <!ENTITY col.status.accesskey            "S">
+<!ENTITY col.status.tooltip              "Status">
 <!ENTITY col.actionPlay.label            "Pause/Resume/Retry">
 <!ENTITY col.actionPlay.accesskey        "u">
+<!ENTITY col.actionPlay.tooltip          "Pause/Resume/Retry">
 <!ENTITY col.actionStop.label            "Cancel/Remove">
 <!ENTITY col.actionStop.accesskey        "C">
+<!ENTITY col.actionStop.tooltip          "Cancel/Remove">
 <!ENTITY col.progress.label              "Progress">
 <!ENTITY col.progress.accesskey          "P">
+<!ENTITY col.progress.tooltip            "Progress">
 <!ENTITY col.timeremaining.label         "Time Left">
 <!ENTITY col.timeremaining.accesskey     "L">
+<!ENTITY col.timeremaining.tooltip       "Time Left">
 <!ENTITY col.transferred.label           "Transferred">
 <!ENTITY col.transferred.accesskey       "T">
+<!ENTITY col.transferred.tooltip         "Transferred">
 <!ENTITY col.transferrate.label          "Speed">
 <!ENTITY col.transferrate.accesskey      "d">
+<!ENTITY col.transferrate.tooltip        "Speed">
 <!ENTITY col.timeelapsed.label           "Time Elapsed">
 <!ENTITY col.timeelapsed.accesskey       "E">
+<!ENTITY col.timeelapsed.tooltip         "Time Elapsed">
 <!ENTITY col.progresstext.label          "&#37;">
 <!ENTITY col.progresstext.accesskey      "&#37;">
+<!ENTITY col.progresstext.tooltip        "Progress (&#37;)">
 <!ENTITY col.source.label                "Source">
 <!ENTITY col.source.accesskey            "o">
+<!ENTITY col.source.tooltip              "Source">
 
 <!ENTITY view.columns.label              "Show Columns">
 <!ENTITY view.columns.accesskey          "C">
