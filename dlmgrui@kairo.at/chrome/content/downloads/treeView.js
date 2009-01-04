@@ -53,6 +53,7 @@ function DownloadTreeView(aDownloadManager) {
   this._listSortCol = "";
   this._listSortAsc = null;
   this._searchTerms = [];
+  this._selectionCache = [];
 }
 
 DownloadTreeView.prototype = {
@@ -298,11 +299,15 @@ DownloadTreeView.prototype = {
 
     // Prepend data to the download list
     this._dlList.unshift(attrs);
+
     // Tell the tree we added 1 row at index 0
     this._tree.rowCountChanged(0, 1);
+
+    // Update the selection
+    this.selection.adjustSelection(0, 1);
+
     // Data has changed, so re-sorting might be needed
     this.sortView("", "");
-    // XXX: we should probably update the selection
   },
 
   updateDownload: function(aDownload) {
@@ -332,8 +337,10 @@ DownloadTreeView.prototype = {
       if (referrer)
         this._dlList[row].referrer = referrer.spec;
     }
+
     // Repaint the tree row
     this._tree.invalidateRow(row);
+
     // Data has changed, so re-sorting might be needed
     this.sortView("", "");
   },
@@ -345,9 +352,12 @@ DownloadTreeView.prototype = {
 
     // Remove data from the download list
     this._dlList.splice(row, 1);
+
     // Tell the tree we removed 1 row at the given row index
     this._tree.rowCountChanged(row, -1);
-    // XXX: we should probably update the selection
+
+    // Update the selection
+    this.selection.adjustSelection(row, -1);
 
     window.updateCommands("tree-select");
   },
@@ -450,8 +460,14 @@ DownloadTreeView.prototype = {
     if (this._searchTerms.join(" ") == prevSearch)
       return;
 
+    // Cache the current selection
+    this._cacheSelection();
+
+    // Rebuild the tree with set search terms
     this.initTree();
-    // XXX: we could try restoring the selection
+
+    // Restore the selection
+    this._restoreSelection();
   },
 
   sortView: function(aColumnID, aDirection) {
@@ -526,14 +542,21 @@ DownloadTreeView.prototype = {
       return 0;
     }
 
+    // Cache the current selection
+    this._cacheSelection();
+
     // Do the actual sorting of the array
     this._dlList.sort(compfunc);
+
     // Cache column and direction for re-sorting
     this._listSortCol = aColumnID;
     this._listSortAsc = sortAscending;
+
     // Repaint the tree
     this._tree.invalidate();
-    // XXX: we should correct the selection
+
+    // Restore the selection
+    this._restoreSelection();
   },
 
   getRowData: function(aRow) {
@@ -551,6 +574,38 @@ DownloadTreeView.prototype = {
         return idx;
     }
     return -1;
+  },
+
+  // Cache IDs of selected downloads for later restoration
+  _cacheSelection: function() {
+    this._selectionCache = [];
+    if (this.selection.count < 1)
+      return;
+
+    // Walk all selected rows and cache theior download IDs
+    let start = new Object();
+    let end = new Object();
+    let numRanges = this.selection.getRangeCount();
+    for (let rg = 0; rg < numRanges; rg++){
+      this.selection.getRangeAt(rg, start, end);
+      for (let row = start.value; row <= end.value; row++){
+        this._selectionCache.push(this._dlList[row].dlid);
+      }
+    }
+  },
+
+  // Restore selection from cached IDs (as possible)
+  _restoreSelection: function() {
+    this.selection.clearSelection();
+    let row;
+    for each (let dlid in this._selectionCache) {
+      // Find out what row this is now and if possible, add it to the selection
+      row = this._getIdxForID(dlid);
+      if (row != -1)
+        this.selection.rangedSelect(row, row, true);
+    }
+    // Work done, clear the cache
+    this._selectionCache = [];
   },
 
 };
