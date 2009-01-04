@@ -65,11 +65,3 @@
 <!ENTITY cmd.goToDownloadPage.accesskey  "G">
 <!ENTITY cmd.copyDownloadLink.label      "Copy Download Link">
 <!ENTITY cmd.copyDownloadLink.accesskey  "L">
-
-
-
-
-<!ENTITY cmd.properties.label             "Properties">
-<!ENTITY cmd.properties.accesskey         "i">
-<!ENTITY cmd.properties.keybinding        "i">
-<!ENTITY confirmCancel "Are you sure you want to cancel the saving of this file?">
