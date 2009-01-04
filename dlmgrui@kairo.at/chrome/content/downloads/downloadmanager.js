@@ -101,13 +101,13 @@ function sortDownloads(aEventTarget)
   if (colID.match(/^menu_SortBy/)) {
     colID = colID.replace(/^menu_SortBy/, "");
     column = document.getElementById(colID);
-    sortDirection = document.getElementById("menu_SortAscending").checked
-                    ? "ascending"
-                    : "descending";
+    sortDirection = document.getElementById("menu_SortDescending").checked
+                    ? "descending"
+                    : "ascending";
   }
   else if (colID == "menu_Unsorted") {
-    // calling .sortView() with an empty colID returns us to original order
-    colID = "";
+    // calling .sortView() with an "unsorted" colID returns us to original order
+    colID = "unsorted";
     column = null;
     sortDirection = "ascending";
   }
@@ -122,11 +122,11 @@ function sortDownloads(aEventTarget)
   }
 
   // Abort if this is still no column
-  if (colID != "" && column.localName != "treecol")
+  if (colID != "unsorted" && column.localName != "treecol")
     return;
 
   // Abort on cyler columns, we don't sort them
-  if (colID != "" && column.getAttribute("cycler") == "true")
+  if (colID != "unsorted" && column.getAttribute("cycler") == "true")
     return;
 
   // Clear attributes on previously sorted column

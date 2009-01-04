@@ -46,10 +46,12 @@ function DownloadTreeView(aDownloadManager) {
   this._tree = null;
   this._selection = null;
   this._dm = aDownloadManager;
-  this._dlList = [];
-  this._lastListIndex = 0;
   this._dlBundle = null;
   this._statement = null;
+  this._dlList = [];
+  this._lastListIndex = 0;
+  this._listSortCol = "";
+  this._listSortAsc = null;
   this._searchTerms = [];
 }
 
@@ -294,9 +296,13 @@ DownloadTreeView.prototype = {
     // prepend in natural sorting
     attrs.listIndex = this._lastListIndex--;
 
+    // Prepend data to the download list
     this._dlList.unshift(attrs);
-    // XXX: we should probably update the selection
+    // Tell the tree we added 1 row at index 0
     this._tree.rowCountChanged(0, 1);
+    // Data has changed, so re-sorting might be needed
+    this.sortView("", "");
+    // XXX: we should probably update the selection
   },
 
   updateDownload: function(aDownload) {
@@ -326,7 +332,10 @@ DownloadTreeView.prototype = {
       if (referrer)
         this._dlList[row].referrer = referrer.spec;
     }
+    // Repaint the tree row
     this._tree.invalidateRow(row);
+    // Data has changed, so re-sorting might be needed
+    this.sortView("", "");
   },
 
   removeDownload: function(aDownloadID) {
@@ -334,9 +343,11 @@ DownloadTreeView.prototype = {
     // Make sure we have an item to remove
     if (row < 0) return;
 
+    // Remove data from the download list
     this._dlList.splice(row, 1);
+    // Tell the tree we removed 1 row at the given row index
+    this._tree.rowCountChanged(row, -1);
     // XXX: we should probably update the selection
-    this._tree.invalidate();
 
     window.updateCommands("tree-select");
   },
@@ -347,6 +358,8 @@ DownloadTreeView.prototype = {
     this._tree.beginUpdateBatch();
     this._dlList = [];
     this._lastListIndex = 0;
+    this._listSortCol = "";
+    this._listSortAsc = null;
 
     this.selection.clearSelection();
 
@@ -415,6 +428,11 @@ DownloadTreeView.prototype = {
       let direction = sortedColumn.element.getAttribute("sortDirection");
       this.sortView(sortedColumn.id, direction);
     }
+    else {
+      // set cache values to default "unsorted" order
+      this._listSortCol = "unsorted";
+      this._listSortAsc = true;
+    }
     this._tree.endUpdateBatch();
 
     window.updateCommands("tree-select");
@@ -433,20 +451,27 @@ DownloadTreeView.prototype = {
       return;
 
     this.initTree();
+    // XXX: we could try restoring the selection
   },
 
   sortView: function(aColumnID, aDirection) {
     let sortAscending = aDirection == "ascending";
 
-    // compare function for two _dlList items
+    if (aColumnID == "" && aDirection == "" && this._listSortCol != "") {
+      // Re-sort in already selected/cached order
+      aColumnID = this._listSortCol;
+      sortAscending = this._listSortAsc;
+    }
+
+    // Compare function for two _dlList items
     let compfunc = function(a, b) {
-      // active downloads are always at the beginning
+      // Active downloads are always at the beginning
       // i.e. 0 for .isActive is larger (!) than 1
       if (a.isActive < b.isActive)
         return 1;
       if (a.isActive > b.isActive)
         return -1;
-      // same active/inactive state, sort normally
+      // Same active/inactive state, sort normally
       let comp_a = null;
       let comp_b = null;
       switch (aColumnID) {
@@ -460,8 +485,8 @@ DownloadTreeView.prototype = {
           break;
         case "Progress":
         case "ProgressPercent":
-          // use original sorting for inactive entries
-          // use only one isActive to be sure we do the same
+          // Use original sorting for inactive entries
+          // Use only one isActive to be sure we do the same
           comp_a = a.isActive ? a.progress : a.listIndex;
           comp_b = a.isActive ? b.progress : b.listIndex;
           break;
@@ -489,6 +514,7 @@ DownloadTreeView.prototype = {
           comp_a = a.uri;
           comp_b = b.uri;
           break;
+        case "unsorted": // Special case for reverting to original order
         default:
           comp_a = a.listIndex;
           comp_b = b.listIndex;
@@ -500,8 +526,14 @@ DownloadTreeView.prototype = {
       return 0;
     }
 
+    // Do the actual sorting of the array
     this._dlList.sort(compfunc);
+    // Cache column and direction for re-sorting
+    this._listSortCol = aColumnID;
+    this._listSortAsc = sortAscending;
+    // Repaint the tree
     this._tree.invalidate();
+    // XXX: we should correct the selection
   },
 
   getRowData: function(aRow) {

@@ -288,12 +288,6 @@
               <menuitem id="menu_SortByStatus" type="radio" name="columns"
                         label="&col.status.label;"
                         accesskey="&col.status.accesskey;"/>
-              <menuitem id="menu_SortByActionPlay" type="radio" name="columns"
-                        label="&col.actionPlay.label;"
-                        accesskey="&col.actionPlay.accesskey;"/>
-              <menuitem id="menu_SortByActionStop" type="radio" name="columns"
-                        label="&col.actionStop.label;"
-                        accesskey="&col.actionStop.accesskey;"/>
               <menuitem id="menu_SortByProgress" type="radio" name="columns"
                         label="&col.progress.label;"
                         accesskey="&col.progress.accesskey;"/>
