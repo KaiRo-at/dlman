@@ -472,11 +472,13 @@ DownloadTreeView.prototype = {
 
   sortView: function(aColumnID, aDirection) {
     let sortAscending = aDirection == "ascending";
+    let restoreSelection = false;
 
     if (aColumnID == "" && aDirection == "" && this._listSortCol != "") {
       // Re-sort in already selected/cached order
       aColumnID = this._listSortCol;
       sortAscending = this._listSortAsc;
+      let restoreSelection = true;
     }
 
     // Compare function for two _dlList items
@@ -578,6 +580,10 @@ DownloadTreeView.prototype = {
 
   // Cache IDs of selected downloads for later restoration
   _cacheSelection: function() {
+    // Abort if there's already something cached
+    if (this._selectionCache.length)
+      return;
+
     this._selectionCache = [];
     if (this.selection.count < 1)
       return;
@@ -596,6 +602,10 @@ DownloadTreeView.prototype = {
 
   // Restore selection from cached IDs (as possible)
   _restoreSelection: function() {
+    // Abort if the cache is empty
+    if (!this._selectionCache.length)
+      return;
+
     this.selection.clearSelection();
     let row;
     for each (let dlid in this._selectionCache) {

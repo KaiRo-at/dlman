@@ -147,7 +147,7 @@ function sortDownloads(aEventTarget)
   // Actuall sort the tree view
   gDownloadTreeView.sortView(colID, sortDirection);
 
-  if (colID) {
+  if (colID != "unsorted") {
     // Set attributes to the sorting we did
     column.setAttribute("sortActive", "true");
     column.setAttribute("sortDirection", sortDirection);
