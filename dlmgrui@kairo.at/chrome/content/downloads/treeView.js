@@ -255,7 +255,31 @@ DownloadTreeView.prototype = {
   toggleOpenState: function(aRow) { },
   cycleHeader: function(aColumn) { },
   selectionChanged: function() { },
-  cycleCell: function(aRow, aColumn) { },
+  cycleCell: function(aRow, aColumn) {
+    let dl = this._dlList[aRow];
+    switch (aColumn.id) {
+      case "ActionPlay":
+        switch (dl.state) {
+          case nsIDM.DOWNLOAD_DOWNLOADING:
+            pauseDownload(dl.dlid);
+            break;
+          case nsIDM.DOWNLOAD_PAUSED:
+            resumeDownload(dl.dlid);
+            break;
+          case nsIDM.DOWNLOAD_FAILED:
+          case nsIDM.DOWNLOAD_CANCELED:
+            retryDownload(dl.dlid);
+            break;
+        }
+        break;
+      case "ActionStop":
+        if (dl.isActive)
+          cancelDownload(dl);
+        else
+          removeDownload(dl.dlid);
+        break;
+    }
+  },
   isEditable: function(aRow, aColumn) { return false; },
   isSelectable: function(aRow, aColumn) { return false; },
   setCellValue: function(aRow, aColumn, aText) { },

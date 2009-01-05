@@ -59,13 +59,8 @@ function dmStartup()
   gDownloadTreeView = new DownloadTreeView(gDownloadManager);
   gDownloadTree.view = gDownloadTreeView;
 
-  // Append controller on all our interactive controls
-  gDownloadTree.controllers.appendController(dlTreeController);
-  gSearchBox.controllers.appendController(dlTreeController);
-  clearListButton.controllers.appendController(dlTreeController);
-
-  // Catch tree clicks so the action column can work
-  gDownloadTree.addEventListener("click", onTreeClick, true);
+  // Append controller on the whole window
+  window.controllers.appendController(dlTreeController);
 
   // The DownloadProgressListener (DownloadProgressListener.js) handles
   // progress notifications.
@@ -84,6 +79,7 @@ function dmStartup()
 function dmShutdown()
 {
   gDownloadManager.removeListener(gDownloadListener);
+  window.controllers.removeController(dlTreeController);
 }
 
 function searchDownloads(aInput)
@@ -247,8 +243,6 @@ function showDownload(aDownloadData)
     // If reveal fails for some reason (e.g., it's not implemented on unix or
     // the file doesn't exist), try using the parent if we have it.
     let parent = file.parent.QueryInterface(Components.interfaces.nsILocalFile);
-    if (!parent)
-      return;
 
     try {
       // "Double click" the parent directory to show where the file should be
@@ -256,7 +250,12 @@ function showDownload(aDownloadData)
     } catch (e) {
       // If launch also fails (probably because it's not implemented), let the
       // OS handler try to open the parent
-      openExternal(parent);
+      let uri = Components.classes["@mozilla.org/network/io-service;1"]
+                          .getService(Components.interfaces.nsIIOService)
+                          .newFileURI(parent);
+      let protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+                                  .getService(Components.interfaces.nsIExternalProtocolService);
+      protocolSvc.loadUrl(uri);
     }
   }
 }
@@ -271,50 +270,6 @@ function onTreeSelect(aEvent) {
     gDownloadStatus.label = "";
 
   window.updateCommands("tree-select");
-}
-
-function onTreeClick(aEvent)
-{
-  // we only care about button 0 (left click) events
-  if (aEvent.button != 0) return;
-
-  let tgt = aEvent.originalTarget;
-
-  if (tgt.localName == "treechildren") {
-    let row = new Object;
-    let col = new Object;
-    let childElt = new Object;
-
-    // figure out what cell the click was in
-    gDownloadTree.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY,
-                                          row, col, childElt);
-    if (row.value == -1)
-      return;
-
-    let dl;
-    if (col.value.id == "ActionPlay") {
-      dl = gDownloadTreeView.getRowData(row.value);
-      switch (dl.state) {
-        case nsIDM.DOWNLOAD_DOWNLOADING:
-          pauseDownload(dl.dlid);
-          break;
-        case nsIDM.DOWNLOAD_PAUSED:
-          resumeDownload(dl.dlid);
-          break;
-        case nsIDM.DOWNLOAD_FAILED:
-        case nsIDM.DOWNLOAD_CANCELED:
-          retryDownload(dl.dlid);
-          break;
-      }
-    }
-    else if (col.value.id == "ActionStop") {
-      dl = gDownloadTreeView.getRowData(row.value);
-      if (dl.isActive)
-        cancelDownload(dl);
-      else
-        removeDownload(dl.dlid);
-    }
-  }
 }
 
 function onUpdateViewColumns(aMenuItem)
@@ -558,8 +513,8 @@ let dlTreeController = {
     if (selectionCount > 1) {
       m_selIdx = [];
       // walk all selected rows
-      let start = new Object();
-      let end = new Object();
+      let start = {};
+      let end = {};
       let numRanges = gDownloadTreeView.selection.getRangeCount();
       for (let rg = 0; rg < numRanges; rg++){
         gDownloadTreeView.selection.getRangeAt(rg, start, end);

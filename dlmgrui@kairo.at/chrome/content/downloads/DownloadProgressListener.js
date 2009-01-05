@@ -63,8 +63,7 @@ DownloadProgressListener.prototype = {
     // Update window title in-case we don't get all progress notifications
     onUpdateProgress();
 
-    let state = aDownload.state;
-    switch (state) {
+    switch (aDownload.state) {
       case nsIDM.DOWNLOAD_QUEUED:
         gDownloadTreeView.addDownload(aDownload);
         break;
