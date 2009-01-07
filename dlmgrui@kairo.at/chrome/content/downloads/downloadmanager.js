@@ -40,7 +40,7 @@ let nsIDM = Components.interfaces.nsIDownloadManager;
 let gDownloadTree;
 let gDownloadTreeView;
 let gDownloadManager = Components.classes["@mozilla.org/download-manager;1"]
-                                 .createInstance(nsIDM);
+                                 .getService(nsIDM);
 let gDownloadStatus;
 let gDownloadListener;
 let gSearchBox;
