@@ -35,16 +35,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-let nsIDM = Components.interfaces.nsIDownloadManager;
+const nsIDM = Components.interfaces.nsIDownloadManager;
 
-let gDownloadTree;
-let gDownloadTreeView;
-let gDownloadManager = Components.classes["@mozilla.org/download-manager;1"]
+const nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
+                                           "nsILocalFile", "initWithPath");
+
+var gDownloadTree;
+var gDownloadTreeView;
+var gDownloadManager = Components.classes["@mozilla.org/download-manager;1"]
                                  .getService(nsIDM);
-let gDownloadStatus;
-let gDownloadListener;
-let gSearchBox;
-let gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
+var gDownloadStatus;
+var gDownloadListener;
+var gSearchBox;
+var gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                              .getService(Components.interfaces.nsIPrefBranch);
 
 function dmStartup()

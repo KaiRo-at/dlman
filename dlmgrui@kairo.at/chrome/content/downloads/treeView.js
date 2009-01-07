@@ -37,10 +37,8 @@
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
-Components.utils.import("resource://gre/modules/PluralForm.jsm");
 
-var nsIDM = Components.interfaces.nsIDownloadManager;
-var nsITreeView = Components.interfaces.nsITreeView;
+const nsITreeView = Components.interfaces.nsITreeView;
 
 function DownloadTreeView(aDownloadManager) {
   this._tree = null;
@@ -57,13 +55,8 @@ function DownloadTreeView(aDownloadManager) {
 }
 
 DownloadTreeView.prototype = {
-  QueryInterface: function(aIID) {
-    if (aIID.equals(nsITreeView) ||
-        aIID.equals(Components.interfaces.nsISupports))
-      return this;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: XPCOMUtils.generateQI([nsITreeView,
+                                         Components.interfaces.nsISupports]),
 
   // ***** nsITreeView attributes and methods *****
   get rowCount() {
@@ -85,7 +78,7 @@ DownloadTreeView.prototype = {
     // active/notActive
     let activeAtom = atomService.getAtom(dl.isActive ? "active": "notActive");
     aProperties.AppendElement(activeAtom);
-    // download states
+    // Download states
     switch (dl.state) {
       case nsIDM.DOWNLOAD_PAUSED:
         aProperties.AppendElement(atomService.getAtom("paused"));
@@ -110,7 +103,7 @@ DownloadTreeView.prototype = {
     }
   },
   getCellProperties: function(aRow, aColumn, aProperties) {
-    //append all row properties to the cell
+    // Append all row properties to the cell
     this.getRowProperties(aRow, aProperties);
   },
   getColumnProperties: function(aColumn, aProperties) { },
@@ -159,7 +152,7 @@ DownloadTreeView.prototype = {
     switch (aColumn.id) {
       case "Name":
         let file = getLocalFileFromNativePathOrUrl(dl.file);
-        return file.nativeLeafName || file.leafName;
+        return file.leafName;
       case "Status":
         switch (dl.state) {
           case nsIDM.DOWNLOAD_PAUSED:
@@ -300,6 +293,7 @@ DownloadTreeView.prototype = {
       progress: aDownload.percentComplete,
       startTime: Math.round(aDownload.startTime / 1000),
       endTime: Date.now(),
+      referrer: null,
       currBytes: aDownload.amountTransferred,
       maxBytes: aDownload.size
     };
@@ -327,15 +321,18 @@ DownloadTreeView.prototype = {
     // Tell the tree we added 1 row at index 0
     this._tree.rowCountChanged(0, 1);
 
-    // Update the selection
-    this.selection.adjustSelection(0, 1);
-
     // Data has changed, so re-sorting might be needed
     this.sortView("", "");
   },
 
   updateDownload: function(aDownload) {
     let row = this._getIdxForID(aDownload.id);
+    if (row == -1) {
+      // No download row found to update, but as it's obviously going on,
+      // add it to the list now (can happen with very fast, e.g. local dls)
+      this.addDownload(aDownload);
+      return;
+    }
     if (this._dlList[row].currBytes != aDownload.amountTransferred) {
       this._dlList[row].endTime = Date.now();
       this._dlList[row].currBytes = aDownload.amountTransferred;
@@ -380,9 +377,6 @@ DownloadTreeView.prototype = {
     // Tell the tree we removed 1 row at the given row index
     this._tree.rowCountChanged(row, -1);
 
-    // Update the selection
-    this.selection.adjustSelection(row, -1);
-
     window.updateCommands("tree-select");
   },
 
@@ -419,15 +413,10 @@ DownloadTreeView.prototype = {
         state: this._statement.getInt32(4),
         startTime: Math.round(this._statement.getInt64(5) / 1000),
         endTime: Math.round(this._statement.getInt64(6) / 1000),
+        referrer: this._statement.getString(7),
         currBytes: this._statement.getInt64(8),
         maxBytes: this._statement.getInt64(9)
       };
-
-      // Only add the referrer if it's not null
-      let (referrer = this._statement.getString(7)) {
-        if (referrer)
-          attrs.referrer = referrer;
-      }
 
       // If the download is active, grab the real progress, otherwise default 100
       attrs.isActive = this._statement.getInt32(10);
@@ -593,8 +582,7 @@ DownloadTreeView.prototype = {
   _getIdxForID: function(aDlID) {
     let len = this._dlList.length;
     for (let idx = 0; idx < len; idx++) {
-      if (idx in this._dlList &&
-          this._dlList[idx].dlid === aDlID)
+      if (this._dlList[idx].dlid === aDlID)
         return idx;
     }
     return -1;
@@ -611,9 +599,9 @@ DownloadTreeView.prototype = {
       return;
 
     // Walk all selected rows and cache theior download IDs
-    let start = new Object();
-    let end = new Object();
-    let numRanges = this.selection.getRangeCount();
+    var start = {};
+    var end = {};
+    var numRanges = this.selection.getRangeCount();
     for (let rg = 0; rg < numRanges; rg++){
       this.selection.getRangeAt(rg, start, end);
       for (let row = start.value; row <= end.value; row++){
@@ -629,10 +617,9 @@ DownloadTreeView.prototype = {
       return;
 
     this.selection.clearSelection();
-    let row;
     for each (let dlid in this._selectionCache) {
       // Find out what row this is now and if possible, add it to the selection
-      row = this._getIdxForID(dlid);
+      var row = this._getIdxForID(dlid);
       if (row != -1)
         this.selection.rangedSelect(row, row, true);
     }

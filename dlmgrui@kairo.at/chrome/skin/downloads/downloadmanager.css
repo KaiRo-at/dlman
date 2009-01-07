@@ -37,6 +37,11 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+/* Note to themers:
+   On rows and all cells, those properties for download states are available:
+   active, notActive, paused, downloading, finished, failed, canceled, blocked
+*/
+
 #ActionPlay {
   list-style-image: url("chrome://mozapps/skin/downloads/downloadButtons.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
