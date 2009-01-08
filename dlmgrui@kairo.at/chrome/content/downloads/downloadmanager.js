@@ -72,10 +72,7 @@ function dmStartup()
   gDownloadListener = new DownloadProgressListener();
   gDownloadManager.addListener(gDownloadListener);
 
-  searchDownloads("");
-
-  if (gDownloadStatus)
-    gDownloadTree.focus();
+  gDownloadTree.focus();
 
   if (gDownloadTree.view.rowCount > 0)
     gDownloadTree.view.selection.select(0);

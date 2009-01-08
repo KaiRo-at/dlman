@@ -88,11 +88,9 @@ DownloadProgressListener.prototype = {
     onUpdateProgress();
   },
 
-  onStateChange: function(aWebProgress, aRequest, aState, aStatus, aDownload)
-  {
+  onStateChange: function(aWebProgress, aRequest, aState, aStatus, aDownload) {
   },
 
-  onSecurityChange: function(aWebProgress, aRequest, aState, aDownload)
-  {
+  onSecurityChange: function(aWebProgress, aRequest, aState, aDownload) {
   }
 };
