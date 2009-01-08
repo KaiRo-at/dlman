@@ -64,11 +64,11 @@ DownloadProgressListener.prototype = {
     onUpdateProgress();
 
     switch (aDownload.state) {
-      case nsIDM.DOWNLOAD_QUEUED:
+      case nsIDownloadManager.DOWNLOAD_QUEUED:
         gDownloadTreeView.addDownload(aDownload);
         break;
 
-      case nsIDM.DOWNLOAD_BLOCKED_POLICY:
+      case nsIDownloadManager.DOWNLOAD_BLOCKED_POLICY:
         gDownloadTreeView.addDownload(aDownload);
         // Should fall through, this is a final state but DOWNLOAD_QUEUED
         // is skipped. See nsDownloadManager::AddDownload.

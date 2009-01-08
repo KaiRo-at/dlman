@@ -35,7 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const nsIDM = Components.interfaces.nsIDownloadManager;
+Components.utils.import("resource://gre/modules/PluralForm.jsm");
+
+const nsIDownloadManager = Components.interfaces.nsIDownloadManager;
 
 const nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
                                            "nsILocalFile", "initWithPath");
@@ -43,7 +45,7 @@ const nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
 var gDownloadTree;
 var gDownloadTreeView;
 var gDownloadManager = Components.classes["@mozilla.org/download-manager;1"]
-                                 .getService(nsIDM);
+                                 .getService(nsIDownloadManager);
 var gDownloadStatus;
 var gDownloadListener;
 var gSearchBox;
@@ -463,12 +465,12 @@ let dlTreeController = {
         download = gDownloadManager.getDownload(selItemData.dlid);
         return selectionCount == 1 &&
                selItemData.isActive &&
-               selItemData.state != nsIDM.DOWNLOAD_PAUSED &&
+               selItemData.state != nsIDownloadManager.DOWNLOAD_PAUSED &&
                download.resumable;
       case "cmd_resume":
         download = gDownloadManager.getDownload(selItemData.dlid);
         return selectionCount == 1 &&
-               selItemData.state == nsIDM.DOWNLOAD_PAUSED &&
+               selItemData.state == nsIDownloadManager.DOWNLOAD_PAUSED &&
                download.resumable;
       case "cmd_open":
       case "cmd_show":
@@ -476,15 +478,15 @@ let dlTreeController = {
         // the file its final name until them.
         let file = getLocalFileFromNativePathOrUrl(selItemData.file);
         return selectionCount == 1 &&
-               selItemData.state == nsIDM.DOWNLOAD_FINISHED &&
+               selItemData.state == nsIDownloadManager.DOWNLOAD_FINISHED &&
                file.exists();
       case "cmd_cancel":
         // XXX handling multiple selection would be nice
         return selectionCount == 1 && selItemData.isActive;
       case "cmd_retry":
         return selectionCount == 1 &&
-               (selItemData.state == nsIDM.DOWNLOAD_CANCELED ||
-                selItemData.state == nsIDM.DOWNLOAD_FAILED);
+               (selItemData.state == nsIDownloadManager.DOWNLOAD_CANCELED ||
+                selItemData.state == nsIDownloadManager.DOWNLOAD_FAILED);
       case "cmd_remove":
         // XXX handling multiple selection would be nice
         return selectionCount == 1 && !selItemData.isActive;

@@ -39,19 +39,12 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 
 const nsITreeView = Components.interfaces.nsITreeView;
+// const nsIDownloadManager is already defined in downloadmanager.js
 
 function DownloadTreeView(aDownloadManager) {
-  this._tree = null;
-  this._selection = null;
   this._dm = aDownloadManager;
-  this._dlBundle = null;
-  this._statement = null;
   this._dlList = [];
-  this._lastListIndex = 0;
-  this._listSortCol = "";
-  this._listSortAsc = null;
   this._searchTerms = [];
-  this._selectionCache = [];
 }
 
 DownloadTreeView.prototype = {
@@ -80,24 +73,24 @@ DownloadTreeView.prototype = {
     aProperties.AppendElement(activeAtom);
     // Download states
     switch (dl.state) {
-      case nsIDM.DOWNLOAD_PAUSED:
+      case nsIDownloadManager.DOWNLOAD_PAUSED:
         aProperties.AppendElement(atomService.getAtom("paused"));
         break;
-      case nsIDM.DOWNLOAD_DOWNLOADING:
+      case nsIDownloadManager.DOWNLOAD_DOWNLOADING:
         aProperties.AppendElement(atomService.getAtom("downloading"));
         break;
-      case nsIDM.DOWNLOAD_FINISHED:
+      case nsIDownloadManager.DOWNLOAD_FINISHED:
         aProperties.AppendElement(atomService.getAtom("finished"));
         break;
-      case nsIDM.DOWNLOAD_FAILED:
+      case nsIDownloadManager.DOWNLOAD_FAILED:
         aProperties.AppendElement(atomService.getAtom("failed"));
         break;
-      case nsIDM.DOWNLOAD_CANCELED:
+      case nsIDownloadManager.DOWNLOAD_CANCELED:
         aProperties.AppendElement(atomService.getAtom("canceled"));
         break;
-      case nsIDM.DOWNLOAD_BLOCKED_PARENTAL: // Parental Controls
-      case nsIDM.DOWNLOAD_BLOCKED_POLICY:   // Security Zone Policy
-      case nsIDM.DOWNLOAD_DIRTY:            // possible virus/spyware
+      case nsIDownloadManager.DOWNLOAD_BLOCKED_PARENTAL: // Parental Controls
+      case nsIDownloadManager.DOWNLOAD_BLOCKED_POLICY:   // Security Zone Policy
+      case nsIDownloadManager.DOWNLOAD_DIRTY:            // possible virus/spyware
         aProperties.AppendElement(atomService.getAtom("blocked"));
         break;
     }
@@ -155,21 +148,21 @@ DownloadTreeView.prototype = {
         return file.leafName;
       case "Status":
         switch (dl.state) {
-          case nsIDM.DOWNLOAD_PAUSED:
+          case nsIDownloadManager.DOWNLOAD_PAUSED:
             return this._dlbundle.getFormattedString("pausedpct",
               [DownloadUtils.getTransferTotal(dl.currBytes,
                                               dl.maxBytes)]);
-          case nsIDM.DOWNLOAD_DOWNLOADING:
+          case nsIDownloadManager.DOWNLOAD_DOWNLOADING:
             return this._dlbundle.getString("downloading");
-          case nsIDM.DOWNLOAD_FINISHED:
+          case nsIDownloadManager.DOWNLOAD_FINISHED:
             return this._dlbundle.getString("finished");
-          case nsIDM.DOWNLOAD_FAILED:
+          case nsIDownloadManager.DOWNLOAD_FAILED:
             return this._dlbundle.getString("failed");
-          case nsIDM.DOWNLOAD_CANCELED:
+          case nsIDownloadManager.DOWNLOAD_CANCELED:
             return this._dlbundle.getString("canceled");
-          case nsIDM.DOWNLOAD_BLOCKED_PARENTAL: // Parental Controls
-          case nsIDM.DOWNLOAD_BLOCKED_POLICY:   // Security Zone Policy
-          case nsIDM.DOWNLOAD_DIRTY:            // possible virus/spyware
+          case nsIDownloadManager.DOWNLOAD_BLOCKED_PARENTAL: // Parental Controls
+          case nsIDownloadManager.DOWNLOAD_BLOCKED_POLICY:   // Security Zone Policy
+          case nsIDownloadManager.DOWNLOAD_DIRTY:            // possible virus/spyware
             return this._dlbundle.getString("blocked");
         }
         return this._dlbundle.getString("notStarted");
@@ -177,15 +170,15 @@ DownloadTreeView.prototype = {
         if (dl.isActive)
           return dl.progress;
         switch (dl.state) {
-          case nsIDM.DOWNLOAD_FINISHED:
+          case nsIDownloadManager.DOWNLOAD_FINISHED:
             return this._dlbundle.getString("finished");
-          case nsIDM.DOWNLOAD_FAILED:
+          case nsIDownloadManager.DOWNLOAD_FAILED:
             return this._dlbundle.getString("failed");
-          case nsIDM.DOWNLOAD_CANCELED:
+          case nsIDownloadManager.DOWNLOAD_CANCELED:
             return this._dlbundle.getString("canceled");
-          case nsIDM.DOWNLOAD_BLOCKED_PARENTAL: // Parental Controls
-          case nsIDM.DOWNLOAD_BLOCKED_POLICY:   // Security Zone Policy
-          case nsIDM.DOWNLOAD_DIRTY:            // possible virus/spyware
+          case nsIDownloadManager.DOWNLOAD_BLOCKED_PARENTAL: // Parental Controls
+          case nsIDownloadManager.DOWNLOAD_BLOCKED_POLICY:   // Security Zone Policy
+          case nsIDownloadManager.DOWNLOAD_DIRTY:            // possible virus/spyware
             return this._dlbundle.getString("blocked");
         }
         return this._dlbundle.getString("notStarted");
@@ -210,15 +203,15 @@ DownloadTreeView.prototype = {
         return DownloadUtils.getTransferTotal(dl.currBytes, dl.maxBytes);
       case "TransferRate":
         switch (dl.state) {
-          case nsIDM.DOWNLOAD_DOWNLOADING:
+          case nsIDownloadManager.DOWNLOAD_DOWNLOADING:
             let speed = this._dm.getDownload(dl.dlid).speed;
             this._dlList[aRow]._speed = speed; // used for sorting
             let [rate, unit] = DownloadUtils.convertByteUnits(speed);
             return this._dlbundle.getFormattedString("speedFormat", [rate, unit]);
-          case nsIDM.DOWNLOAD_PAUSED:
+          case nsIDownloadManager.DOWNLOAD_PAUSED:
             return this._dlbundle.getString("paused");
-          case nsIDM.DOWNLOAD_NOTSTARTED:
-          case nsIDM.DOWNLOAD_QUEUED:
+          case nsIDownloadManager.DOWNLOAD_NOTSTARTED:
+          case nsIDownloadManager.DOWNLOAD_QUEUED:
             return this._dlbundle.getString("notStarted");
         }
         return "";
@@ -253,14 +246,14 @@ DownloadTreeView.prototype = {
     switch (aColumn.id) {
       case "ActionPlay":
         switch (dl.state) {
-          case nsIDM.DOWNLOAD_DOWNLOADING:
+          case nsIDownloadManager.DOWNLOAD_DOWNLOADING:
             pauseDownload(dl.dlid);
             break;
-          case nsIDM.DOWNLOAD_PAUSED:
+          case nsIDownloadManager.DOWNLOAD_PAUSED:
             resumeDownload(dl.dlid);
             break;
-          case nsIDM.DOWNLOAD_FAILED:
-          case nsIDM.DOWNLOAD_CANCELED:
+          case nsIDownloadManager.DOWNLOAD_FAILED:
+          case nsIDownloadManager.DOWNLOAD_CANCELED:
             retryDownload(dl.dlid);
             break;
         }
@@ -298,11 +291,11 @@ DownloadTreeView.prototype = {
       maxBytes: aDownload.size
     };
     switch (attrs.state) {
-      case nsIDM.DOWNLOAD_NOTSTARTED:
-      case nsIDM.DOWNLOAD_DOWNLOADING:
-      case nsIDM.DOWNLOAD_PAUSED:
-      case nsIDM.DOWNLOAD_QUEUED:
-      case nsIDM.DOWNLOAD_SCANNING:
+      case nsIDownloadManager.DOWNLOAD_NOTSTARTED:
+      case nsIDownloadManager.DOWNLOAD_DOWNLOADING:
+      case nsIDownloadManager.DOWNLOAD_PAUSED:
+      case nsIDownloadManager.DOWNLOAD_QUEUED:
+      case nsIDownloadManager.DOWNLOAD_SCANNING:
         attrs.isActive = 1;
         break;
       default:
@@ -342,11 +335,11 @@ DownloadTreeView.prototype = {
     if (this._dlList[row].state != aDownload.state) {
       this._dlList[row].state = aDownload.state;
       switch (this._dlList[row].state) {
-        case nsIDM.DOWNLOAD_NOTSTARTED:
-        case nsIDM.DOWNLOAD_DOWNLOADING:
-        case nsIDM.DOWNLOAD_PAUSED:
-        case nsIDM.DOWNLOAD_QUEUED:
-        case nsIDM.DOWNLOAD_SCANNING:
+        case nsIDownloadManager.DOWNLOAD_NOTSTARTED:
+        case nsIDownloadManager.DOWNLOAD_DOWNLOADING:
+        case nsIDownloadManager.DOWNLOAD_PAUSED:
+        case nsIDownloadManager.DOWNLOAD_QUEUED:
+        case nsIDownloadManager.DOWNLOAD_SCANNING:
           this._dlList[row].isActive = 1;
           break;
         default:
@@ -397,11 +390,11 @@ DownloadTreeView.prototype = {
       "FROM moz_downloads " +
       "ORDER BY isActive DESC, endTime DESC, startTime DESC");
 
-    this._statement.bindInt32Parameter(0, nsIDM.DOWNLOAD_NOTSTARTED);
-    this._statement.bindInt32Parameter(1, nsIDM.DOWNLOAD_DOWNLOADING);
-    this._statement.bindInt32Parameter(2, nsIDM.DOWNLOAD_PAUSED);
-    this._statement.bindInt32Parameter(3, nsIDM.DOWNLOAD_QUEUED);
-    this._statement.bindInt32Parameter(4, nsIDM.DOWNLOAD_SCANNING);
+    this._statement.bindInt32Parameter(0, nsIDownloadManager.DOWNLOAD_NOTSTARTED);
+    this._statement.bindInt32Parameter(1, nsIDownloadManager.DOWNLOAD_DOWNLOADING);
+    this._statement.bindInt32Parameter(2, nsIDownloadManager.DOWNLOAD_PAUSED);
+    this._statement.bindInt32Parameter(3, nsIDownloadManager.DOWNLOAD_QUEUED);
+    this._statement.bindInt32Parameter(4, nsIDownloadManager.DOWNLOAD_SCANNING);
 
     while (this._statement.executeStep()) {
       // Try to get the attribute values from the statement
@@ -576,6 +569,17 @@ DownloadTreeView.prototype = {
     return this._dlList[aRow];
   },
 
+  // ***** local member vars *****
+
+  _tree: null,
+  _selection: null,
+  _dlBundle: null,
+  _statement: null,
+  _lastListIndex: 0,
+  _listSortCol: "",
+  _listSortAsc: null,
+  _selectionCache: null,
+
   // ***** local helper functions *****
 
   // Get array index in _dlList for a given download ID
@@ -591,7 +595,7 @@ DownloadTreeView.prototype = {
   // Cache IDs of selected downloads for later restoration
   _cacheSelection: function() {
     // Abort if there's already something cached
-    if (this._selectionCache.length)
+    if (this._selectionCache)
       return;
 
     this._selectionCache = [];
@@ -613,7 +617,7 @@ DownloadTreeView.prototype = {
   // Restore selection from cached IDs (as possible)
   _restoreSelection: function() {
     // Abort if the cache is empty
-    if (!this._selectionCache.length)
+    if (!this._selectionCache)
       return;
 
     this.selection.clearSelection();
@@ -624,7 +628,7 @@ DownloadTreeView.prototype = {
         this.selection.rangedSelect(row, row, true);
     }
     // Work done, clear the cache
-    this._selectionCache = [];
+    this._selectionCache = null;
   },
 
 };
