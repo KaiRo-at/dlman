@@ -65,11 +65,11 @@ DownloadTreeView.prototype = {
   },
 
   getRowProperties: function(aRow, aProperties) {
-    let dl = this._dlList[aRow];
-    let atomService = Components.classes["@mozilla.org/atom-service;1"]
+    var dl = this._dlList[aRow];
+    var atomService = Components.classes["@mozilla.org/atom-service;1"]
                                 .getService(Components.interfaces.nsIAtomService);
     // active/notActive
-    let activeAtom = atomService.getAtom(dl.isActive ? "active": "notActive");
+    var activeAtom = atomService.getAtom(dl.isActive ? "active": "notActive");
     aProperties.AppendElement(activeAtom);
     // Download states
     switch (dl.state) {
@@ -120,7 +120,7 @@ DownloadTreeView.prototype = {
   },
 
   getProgressMode: function(aRow, aColumn) {
-    let dl = this._dlList[aRow];
+    var dl = this._dlList[aRow];
     switch (aColumn.id) {
       case "Progress":
         if (dl.isActive)
@@ -141,10 +141,10 @@ DownloadTreeView.prototype = {
   },
 
   getCellText: function(aRow, aColumn) {
-    let dl = this._dlList[aRow];
+    var dl = this._dlList[aRow];
     switch (aColumn.id) {
       case "Name":
-        let file = getLocalFileFromNativePathOrUrl(dl.file);
+        var file = getLocalFileFromNativePathOrUrl(dl.file);
         return file.leafName;
       case "Status":
         switch (dl.state) {
@@ -186,15 +186,15 @@ DownloadTreeView.prototype = {
         return dl.progress;
       case "TimeRemaining":
         if (dl.isActive) {
-          let dld = this._dm.getDownload(dl.dlid);
-          let maxBytes = (dl.maxBytes == null) ? -1 : dl.maxBytes;
-          let speed = (dld.speed == null) ? -1 : dld.speed;
-          let lastSec = (dl.lastSec == null) ? Infinity : dl.lastSec;
+          var dld = this._dm.getDownload(dl.dlid);
+          var maxBytes = (dl.maxBytes == null) ? -1 : dl.maxBytes;
+          var speed = (dld.speed == null) ? -1 : dld.speed;
+          var lastSec = (dl.lastSec == null) ? Infinity : dl.lastSec;
           // Calculate the time remaining if we have valid values
-          let seconds = (speed > 0) && (maxBytes > 0)
+          var seconds = (speed > 0) && (maxBytes > 0)
                         ? (maxBytes - dl.currBytes) / speed
                         : -1;
-          let [timeLeft, newLast] = DownloadUtils.getTimeLeft(seconds, lastSec);
+          var [timeLeft, newLast] = DownloadUtils.getTimeLeft(seconds, lastSec);
           this._dlList[aRow].lastSec = newLast;
           return timeLeft;
         }
@@ -204,9 +204,9 @@ DownloadTreeView.prototype = {
       case "TransferRate":
         switch (dl.state) {
           case nsIDownloadManager.DOWNLOAD_DOWNLOADING:
-            let speed = this._dm.getDownload(dl.dlid).speed;
+            var speed = this._dm.getDownload(dl.dlid).speed;
             this._dlList[aRow]._speed = speed; // used for sorting
-            let [rate, unit] = DownloadUtils.convertByteUnits(speed);
+            var [rate, unit] = DownloadUtils.convertByteUnits(speed);
             return this._dlbundle.getFormattedString("speedFormat", [rate, unit]);
           case nsIDownloadManager.DOWNLOAD_PAUSED:
             return this._dlbundle.getString("paused");
@@ -217,8 +217,8 @@ DownloadTreeView.prototype = {
         return "";
       case "TimeElapsed":
         if (dl.endTime && dl.startTime && (dl.endTime > dl.startTime)) {
-          let seconds = (dl.endTime - dl.startTime) / 1000;
-          let [time1, unit1, time2, unit2] =
+          var seconds = (dl.endTime - dl.startTime) / 1000;
+          var [time1, unit1, time2, unit2] =
             DownloadUtils.convertTimeUnits(seconds);
           if (seconds < 3600 || time2 == 0)
             return this._dlbundle.getFormattedString("timeSingle", [time1, unit1]);
@@ -242,7 +242,7 @@ DownloadTreeView.prototype = {
   cycleHeader: function(aColumn) { },
   selectionChanged: function() { },
   cycleCell: function(aRow, aColumn) {
-    let dl = this._dlList[aRow];
+    var dl = this._dlList[aRow];
     switch (aColumn.id) {
       case "ActionPlay":
         switch (dl.state) {
@@ -277,7 +277,7 @@ DownloadTreeView.prototype = {
   // ***** local public methods *****
 
   addDownload: function(aDownload) {
-    let attrs = {
+    var attrs = {
       dlid: aDownload.id,
       file: aDownload.target.spec,
       target: aDownload.displayName,
@@ -319,7 +319,7 @@ DownloadTreeView.prototype = {
   },
 
   updateDownload: function(aDownload) {
-    let row = this._getIdxForID(aDownload.id);
+    var row = this._getIdxForID(aDownload.id);
     if (row == -1) {
       // No download row found to update, but as it's obviously going on,
       // add it to the list now (can happen with very fast, e.g. local dls)
@@ -347,7 +347,7 @@ DownloadTreeView.prototype = {
           break;
       }
       // We should eventually know the referrer at some point
-      let referrer = aDownload.referrer;
+      var referrer = aDownload.referrer;
       if (referrer)
         this._dlList[row].referrer = referrer.spec;
     }
@@ -360,7 +360,7 @@ DownloadTreeView.prototype = {
   },
 
   removeDownload: function(aDownloadID) {
-    let row = this._getIdxForID(aDownloadID);
+    var row = this._getIdxForID(aDownloadID);
     // Make sure we have an item to remove
     if (row < 0) return;
 
@@ -398,7 +398,7 @@ DownloadTreeView.prototype = {
 
     while (this._statement.executeStep()) {
       // Try to get the attribute values from the statement
-      let attrs = {
+      var attrs = {
         dlid: this._statement.getInt64(0),
         file: this._statement.getString(1),
         target: this._statement.getString(2),
@@ -424,9 +424,9 @@ DownloadTreeView.prototype = {
       // Search through the download attributes that are shown to the user and
       // make it into one big string for easy combined searching
       // XXX: toolkit uses the target, status and dateTime attributes of the XBL item
-      let combinedSearch = attrs.file.toLowerCase() + " " + attrs.uri.toLowerCase();
+      var combinedSearch = attrs.file.toLowerCase() + " " + attrs.uri.toLowerCase();
 
-      let matchSearch = true;
+      var matchSearch = true;
       for each (let term in this._searchTerms)
         if (combinedSearch.search(term) == -1)
           matchSearch = false;
@@ -439,9 +439,9 @@ DownloadTreeView.prototype = {
     this._statement.reset();
     this._lastListIndex = 0; // we'll prepend other downloads with --!
     // find sorted column and sort the tree
-    let sortedColumn = this._tree.columns.getSortedColumn();
+    var sortedColumn = this._tree.columns.getSortedColumn();
     if (sortedColumn) {
-      let direction = sortedColumn.element.getAttribute("sortDirection");
+      var direction = sortedColumn.element.getAttribute("sortDirection");
       this.sortView(sortedColumn.id, direction);
     }
     else {
@@ -456,7 +456,7 @@ DownloadTreeView.prototype = {
 
   searchView: function(aInput) {
     // Stringify the previous search
-    let prevSearch = this._searchTerms.join(" ");
+    var prevSearch = this._searchTerms.join(" ");
 
     // Array of space-separated lower-case search terms
     this._searchTerms = aInput.replace(/^\s+|\s+$/g, "")
@@ -477,7 +477,7 @@ DownloadTreeView.prototype = {
   },
 
   sortView: function(aColumnID, aDirection) {
-    let sortAscending = aDirection == "ascending";
+    var sortAscending = aDirection == "ascending";
 
     if (aColumnID == "" && aDirection == "" && this._listSortCol != "") {
       // Re-sort in already selected/cached order
@@ -486,7 +486,7 @@ DownloadTreeView.prototype = {
     }
 
     // Compare function for two _dlList items
-    let compfunc = function(a, b) {
+    var compfunc = function(a, b) {
       // Active downloads are always at the beginning
       // i.e. 0 for .isActive is larger (!) than 1
       if (a.isActive < b.isActive)
@@ -494,8 +494,8 @@ DownloadTreeView.prototype = {
       if (a.isActive > b.isActive)
         return -1;
       // Same active/inactive state, sort normally
-      let comp_a = null;
-      let comp_b = null;
+      var comp_a = null;
+      var comp_b = null;
       switch (aColumnID) {
         case "Name":
           comp_a = a.target.toLowerCase();
@@ -584,7 +584,7 @@ DownloadTreeView.prototype = {
 
   // Get array index in _dlList for a given download ID
   _getIdxForID: function(aDlID) {
-    let len = this._dlList.length;
+    var len = this._dlList.length;
     for (let idx = 0; idx < len; idx++) {
       if (this._dlList[idx].dlid === aDlID)
         return idx;

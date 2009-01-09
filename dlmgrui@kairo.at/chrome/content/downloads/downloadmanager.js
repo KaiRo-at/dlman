@@ -57,7 +57,6 @@ function dmStartup()
   gDownloadTree = document.getElementById("downloadTree");
   gDownloadStatus = document.getElementById("statusbar-display");
   gSearchBox = document.getElementById("search-box");
-  let clearListButton = document.getElementById("clearListButton");
 
   // We need to keep the oview object around globally to access "local"
   // non-nsITreeView methods
@@ -91,9 +90,9 @@ function searchDownloads(aInput)
 
 function sortDownloads(aEventTarget)
 {
-  let column = aEventTarget;
-  let colID = column.getAttribute("id");
-  let sortDirection = null;
+  var column = aEventTarget;
+  var colID = column.getAttribute("id");
+  var sortDirection = null;
 
   // If the target is a menuitem, handle it and forward to a column
   if (colID.match(/^menu_SortBy/)) {
@@ -172,7 +171,7 @@ function cancelDownload(aDownloadData)
 {
   gDownloadManager.cancelDownload(aDownloadData.dlid);
   // delete the file if it exists
-  let file = getLocalFileFromNativePathOrUrl(aDownloadData.file);
+  var file = getLocalFileFromNativePathOrUrl(aDownloadData.file);
   if (file.exists())
     file.remove(false);
 }
@@ -185,9 +184,9 @@ function removeDownload(aDownloadID)
 
 function openDownload(aDownloadData)
 {
-  let file = getLocalFileFromNativePathOrUrl(aDownloadData.file);
+  var file = getLocalFileFromNativePathOrUrl(aDownloadData.file);
   if (file.isExecutable()) {
-    let alertOnEXEOpen = true;
+    var alertOnEXEOpen = true;
     try {
       alertOnEXEOpen = gPrefService.getBoolPref("browser.download.manager.alertOnEXEOpen");
     } catch (e) { }
@@ -195,7 +194,7 @@ function openDownload(aDownloadData)
     // On Vista and above, we rely on native security prompting for
     // downloaded content.
     try {
-      let sysInfo = Components.classes["@mozilla.org/system-info;1"]
+      var sysInfo = Components.classes["@mozilla.org/system-info;1"]
                               .getService(Components.interfaces.nsIPropertyBag2);
       if (/^Windows/.match(sysInfo.getProperty("name")) &&
           (parseFloat(sysInfo.getProperty("version")) >= 6))
@@ -203,17 +202,17 @@ function openDownload(aDownloadData)
     } catch (ex) { }
 
     if (alertOnEXEOpen) {
-      let dlbundle = document.getElementById("dmBundle");
-      let name = aDownloadData.target;
-      let message = dlbundle.getFormattedString("fileExecutableSecurityWarning", [name, name]);
+      var dlbundle = document.getElementById("dmBundle");
+      var name = aDownloadData.target;
+      var message = dlbundle.getFormattedString("fileExecutableSecurityWarning", [name, name]);
 
-      let title = dlbundle.getString("fileExecutableSecurityWarningTitle");
-      let dontAsk = dlbundle.getString("fileExecutableSecurityWarningDontAsk");
+      var title = dlbundle.getString("fileExecutableSecurityWarningTitle");
+      var dontAsk = dlbundle.getString("fileExecutableSecurityWarningDontAsk");
 
-      let promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+      var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                 .getService(Components.interfaces.nsIPromptService);
-      let checkbox = { value: false };
-      let open = promptSvc.confirmCheck(window, title, message, dontAsk, checkbox);
+      var checkbox = { value: false };
+      var open = promptSvc.confirmCheck(window, title, message, dontAsk, checkbox);
 
       if (!open)
         return;
@@ -225,10 +224,10 @@ function openDownload(aDownloadData)
   } catch (ex) {
     // If launch fails, try sending it through the system's external
     // file: URL handler
-    let uri = Components.classes["@mozilla.org/network/io-service;1"]
+    var uri = Components.classes["@mozilla.org/network/io-service;1"]
                         .getService(Components.interfaces.nsIIOService)
                         .newFileURI(file);
-    let protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+    var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
                                 .getService(Components.interfaces.nsIExternalProtocolService);
     protocolSvc.loadUrl(uri);
   }
@@ -244,7 +243,7 @@ function showDownload(aDownloadData)
   } catch (e) {
     // If reveal fails for some reason (e.g., it's not implemented on unix or
     // the file doesn't exist), try using the parent if we have it.
-    let parent = file.parent.QueryInterface(Components.interfaces.nsILocalFile);
+    var parent = file.parent.QueryInterface(Components.interfaces.nsILocalFile);
 
     try {
       // "Double click" the parent directory to show where the file should be
@@ -252,10 +251,10 @@ function showDownload(aDownloadData)
     } catch (e) {
       // If launch also fails (probably because it's not implemented), let the
       // OS handler try to open the parent
-      let uri = Components.classes["@mozilla.org/network/io-service;1"]
+      var uri = Components.classes["@mozilla.org/network/io-service;1"]
                           .getService(Components.interfaces.nsIIOService)
                           .newFileURI(parent);
-      let protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+      var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
                                   .getService(Components.interfaces.nsIExternalProtocolService);
       protocolSvc.loadUrl(uri);
     }
@@ -265,8 +264,8 @@ function showDownload(aDownloadData)
 function onTreeSelect(aEvent) {
   var selectionCount = gDownloadTreeView.selection.count;
   if (selectionCount == 1) {
-    let selItemData = gDownloadTreeView.getRowData(gDownloadTree.currentIndex);
-    let file = getLocalFileFromNativePathOrUrl(selItemData.file);
+    var selItemData = gDownloadTreeView.getRowData(gDownloadTree.currentIndex);
+    var file = getLocalFileFromNativePathOrUrl(selItemData.file);
     gDownloadStatus.label = file.path;
   } else
     gDownloadStatus.label = "";
@@ -278,8 +277,8 @@ function onUpdateViewColumns(aMenuItem)
 {
   while (aMenuItem) {
     // Each menuitem should be checked if its column is not hidden.
-    let colID = aMenuItem.id.replace(/^menu_Toggle/, "");
-    let column = document.getElementById(colID);
+    var colID = aMenuItem.id.replace(/^menu_Toggle/, "");
+    var column = document.getElementById(colID);
     aMenuItem.setAttribute("checked", !column.hidden);
     aMenuItem = aMenuItem.nextSibling;
   }
@@ -287,15 +286,15 @@ function onUpdateViewColumns(aMenuItem)
 
 function toggleColumn(aMenuItem)
 {
-  let colID = aMenuItem.id.replace(/^menu_Toggle/, "");
+  var colID = aMenuItem.id.replace(/^menu_Toggle/, "");
   var column = document.getElementById(colID);
   column.setAttribute("hidden", !column.hidden);
 }
 
 function onUpdateViewSort(aMenuItem)
 {
-  let unsorted = true;
-  let ascending = true;
+  var unsorted = true;
+  var ascending = true;
   while (aMenuItem) {
     switch (aMenuItem.id) {
       case "": // separator
@@ -315,9 +314,9 @@ function onUpdateViewSort(aMenuItem)
           aMenuItem.setAttribute("checked", "true");
         break;
       default:
-        let colID = aMenuItem.id.replace(/^menu_SortBy/, "");
-        let column = document.getElementById(colID);
-        let direction = column.getAttribute("sortDirection");
+        var colID = aMenuItem.id.replace(/^menu_SortBy/, "");
+        var column = document.getElementById(colID);
+        var direction = column.getAttribute("sortDirection");
         if (column.getAttribute("sortActive") == "true" && direction) {
           // We've found a sorted column. Remember its direction.
           ascending = direction == "ascending";
@@ -330,11 +329,11 @@ function onUpdateViewSort(aMenuItem)
 }
 
 // This is called by the progress listener.
-let gLastComputedMean = -1;
-let gLastActiveDownloads = 0;
+var gLastComputedMean = -1;
+var gLastActiveDownloads = 0;
 function onUpdateProgress()
 {
-  let numActiveDownloads = gDownloadManager.activeDownloadCount;
+  var numActiveDownloads = gDownloadManager.activeDownloadCount;
 
   // Use the default title and reset "last" values if there's no downloads
   if (numActiveDownloads == 0) {
@@ -346,11 +345,11 @@ function onUpdateProgress()
   }
 
   // Establish the mean transfer speed and amount downloaded.
-  let mean = 0;
-  let base = 0;
-  let dls = gDownloadManager.activeDownloads;
+  var mean = 0;
+  var base = 0;
+  var dls = gDownloadManager.activeDownloads;
   while (dls.hasMoreElements()) {
-    let dl = dls.getNext().QueryInterface(Components.interfaces.nsIDownload);
+    var dl = dls.getNext().QueryInterface(Components.interfaces.nsIDownload);
     if (dl.percentComplete < 100 && dl.size > 0) {
       mean += dl.amountTransferred;
       base += dl.size;
@@ -358,8 +357,8 @@ function onUpdateProgress()
   }
 
   // Calculate the percent transferred, unless we don't have a total file size
-  let dlbundle = document.getElementById("dmBundle");
-  let title = dlbundle.getString("downloadsTitlePercent");
+  var dlbundle = document.getElementById("dmBundle");
+  var title = dlbundle.getString("downloadsTitlePercent");
   if (base == 0)
     title = dlbundle.getString("downloadsTitleFiles");
   else
@@ -389,7 +388,7 @@ function onUpdateProgress()
 function getLocalFileFromNativePathOrUrl(aPathOrUrl) {
   if (aPathOrUrl.substring(0,7) == "file://") {
     // if this is a URL, get the file from that
-    let ioSvc = Components.classes["@mozilla.org/network/io-service;1"].
+    var ioSvc = Components.classes["@mozilla.org/network/io-service;1"].
                 getService(Components.interfaces.nsIIOService);
 
     // XXX it's possible that using a null char-set here is bad
@@ -420,7 +419,7 @@ function replaceInsert(aText, aIndex, aValue)
   return aText.replace("#" + aIndex, aValue);
 }
 
-let dlTreeController = {
+var dlTreeController = {
   supportsCommand: function(aCommand)
   {
     switch (aCommand) {
@@ -443,29 +442,27 @@ let dlTreeController = {
   isCommandEnabled: function(aCommand)
   {
     // we can even enable some commands when we have no selection
-    let ignoreSelection = (aCommand == "cmd_selectAll" ||
+    var ignoreSelection = (aCommand == "cmd_selectAll" ||
                            aCommand == "cmd_clearList");
 
-    let selectionCount = 0;
+    var selectionCount = 0;
     if (gDownloadTreeView && gDownloadTreeView.selection)
       selectionCount = gDownloadTreeView.selection.count;
     if (!ignoreSelection && !selectionCount) return false;
 
-    let selItemData = selectionCount
+    var selItemData = selectionCount
                       ? gDownloadTreeView.getRowData(gDownloadTree.currentIndex)
                       : null;
 
-    let download = null; // used for getting an nsIDownload object
-
     switch (aCommand) {
       case "cmd_pause":
-        download = gDownloadManager.getDownload(selItemData.dlid);
+        var download = gDownloadManager.getDownload(selItemData.dlid);
         return selectionCount == 1 &&
                selItemData.isActive &&
                selItemData.state != nsIDownloadManager.DOWNLOAD_PAUSED &&
                download.resumable;
       case "cmd_resume":
-        download = gDownloadManager.getDownload(selItemData.dlid);
+        var download = gDownloadManager.getDownload(selItemData.dlid);
         return selectionCount == 1 &&
                selItemData.state == nsIDownloadManager.DOWNLOAD_PAUSED &&
                download.resumable;
@@ -473,7 +470,7 @@ let dlTreeController = {
       case "cmd_show":
         // we can't reveal until the download is complete, because we have not given
         // the file its final name until them.
-        let file = getLocalFileFromNativePathOrUrl(selItemData.file);
+        var file = getLocalFileFromNativePathOrUrl(selItemData.file);
         return selectionCount == 1 &&
                selItemData.state == nsIDownloadManager.DOWNLOAD_FINISHED &&
                file.exists();
@@ -502,16 +499,16 @@ let dlTreeController = {
 
   doCommand: function(aCommand){
     // we can even enable some commands when we have no selection
-    let ignoreSelection = (aCommand == "cmd_selectAll" ||
+    var ignoreSelection = (aCommand == "cmd_selectAll" ||
                            aCommand == "cmd_clearList");
 
-    let selectionCount = 0;
+    var selectionCount = 0;
     if (gDownloadTreeView && gDownloadTreeView.selection)
       selectionCount = gDownloadTreeView.selection.count;
-    let selIdx = selectionCount == 1 ? gDownloadTree.currentIndex : -1;
-    let selItemData = selectionCount == 1 ? gDownloadTreeView.getRowData(selIdx) : null;
+    var selIdx = selectionCount == 1 ? gDownloadTree.currentIndex : -1;
+    var selItemData = selectionCount == 1 ? gDownloadTreeView.getRowData(selIdx) : null;
 
-    let m_selIdx = [selIdx];
+    var m_selIdx = [selIdx];
     if (selectionCount > 1) {
       m_selIdx = [];
       // walk all selected rows
@@ -556,9 +553,9 @@ let dlTreeController = {
           openUILink(selItemData.uri);
         break;
       case "cmd_copyLocation":
-        let clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+        var clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
                                   .getService(Components.interfaces.nsIClipboardHelper);
-        let uris = [];
+        var uris = [];
         for (let idx = 0; idx < m_selIdx.length; idx++) {
           let dldata = gDownloadTreeView.getRowData(idx);
           uris.push(dldata.uri);
@@ -602,7 +599,7 @@ let dlTreeController = {
   },
 
   onCommandUpdate: function() {
-    let cmds = ["cmd_pause", "cmd_resume", "cmd_retry", "cmd_cancel",
+    var cmds = ["cmd_pause", "cmd_resume", "cmd_retry", "cmd_cancel",
                 "cmd_remove", "cmd_open", "cmd_show", "cmd_openReferrer",
                 "cmd_copyLocation", "cmd_selectAll", "cmd_clearList"];
     for (let command in cmds)
