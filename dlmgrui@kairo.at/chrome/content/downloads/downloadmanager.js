@@ -58,13 +58,13 @@ function dmStartup()
   gDownloadStatus = document.getElementById("statusbar-display");
   gSearchBox = document.getElementById("search-box");
 
+  // Insert as first controller on the whole window
+  window.controllers.insertControllerAt(0, dlTreeController);
+
   // We need to keep the oview object around globally to access "local"
   // non-nsITreeView methods
   gDownloadTreeView = new DownloadTreeView(gDownloadManager);
   gDownloadTree.view = gDownloadTreeView;
-
-  // Append controller on the whole window
-  window.controllers.appendController(dlTreeController);
 
   // The DownloadProgressListener (DownloadProgressListener.js) handles
   // progress notifications.
@@ -91,16 +91,20 @@ function searchDownloads(aInput)
 function sortDownloads(aEventTarget)
 {
   var column = aEventTarget;
-  var colID = column.getAttribute("id");
+  var colID = column.id;
   var sortDirection = null;
 
   // If the target is a menuitem, handle it and forward to a column
   if (colID.match(/^menu_SortBy/)) {
     colID = colID.replace(/^menu_SortBy/, "");
     column = document.getElementById(colID);
-    sortDirection = document.getElementById("menu_SortDescending").checked
-                    ? "descending"
-                    : "ascending";
+    var sortedColumn = gDownloadTree.columns.getSortedColumn();
+    if (sortedColumn && sortedColumn.id == colID) {
+      sortDirection = sortedColumn.element.getAttribute("sortDirection");
+    }
+    else {
+      sortDirection = "ascending";
+    }
   }
   else if (colID == "menu_Unsorted") {
     // calling .sortView() with an "unsorted" colID returns us to original order
@@ -110,20 +114,19 @@ function sortDownloads(aEventTarget)
   }
   else if (colID == "menu_SortAscending" || colID == "menu_SortDescending") {
     sortDirection = colID.replace(/^menu_Sort/, "").toLowerCase();
-    for (let node = document.getElementById("Name"); node; node = node.nextSibling) {
-      if (node.getAttribute("sortActive") == "true") {
-        colID = node.id;
-        column = node;
-      }
+    var sortedColumn = gDownloadTree.columns.getSortedColumn();
+    if (sortedColumn) {
+      colID = sortedColumn.id;
+      column = sortedColumn.element;
     }
   }
 
   // Abort if this is still no column
-  if (colID != "unsorted" && column.localName != "treecol")
+  if (column && column.localName != "treecol")
     return;
 
   // Abort on cyler columns, we don't sort them
-  if (colID != "unsorted" && column.getAttribute("cycler") == "true")
+  if (column && column.getAttribute("cycler") == "true")
     return;
 
   // Clear attributes on previously sorted column
@@ -136,15 +139,14 @@ function sortDownloads(aEventTarget)
 
   if (!sortDirection) {
     // If not set above already, toggle the current direction
-    sortDirection = column.getAttribute("sortDirection") == "ascending"
-                    ? "descending"
-                    : "ascending";
+    sortDirection = column.getAttribute("sortDirection") == "ascending" ?
+                    "descending" : "ascending";
   }
 
-  // Actuall sort the tree view
+  // Actually sort the tree view
   gDownloadTreeView.sortView(colID, sortDirection);
 
-  if (colID != "unsorted") {
+  if (column) {
     // Set attributes to the sorting we did
     column.setAttribute("sortActive", "true");
     column.setAttribute("sortDirection", sortDirection);
@@ -196,7 +198,7 @@ function openDownload(aDownloadData)
     try {
       var sysInfo = Components.classes["@mozilla.org/system-info;1"]
                               .getService(Components.interfaces.nsIPropertyBag2);
-      if (/^Windows/.match(sysInfo.getProperty("name")) &&
+      if (sysInfo.getProperty("name").match(/^Windows/) &&
           (parseFloat(sysInfo.getProperty("version")) >= 6))
         alertOnEXEOpen = false;
     } catch (ex) { }
@@ -261,14 +263,16 @@ function showDownload(aDownloadData)
   }
 }
 
-function onTreeSelect(aEvent) {
+function onTreeSelect(aEvent)
+{
   var selectionCount = gDownloadTreeView.selection.count;
   if (selectionCount == 1) {
     var selItemData = gDownloadTreeView.getRowData(gDownloadTree.currentIndex);
     var file = getLocalFileFromNativePathOrUrl(selItemData.file);
     gDownloadStatus.label = file.path;
-  } else
+  } else {
     gDownloadStatus.label = "";
+  }
 
   window.updateCommands("tree-select");
 }
@@ -378,31 +382,6 @@ function onUpdateProgress()
   }
 }
 
-// -- copied from downloads.js: getLocalFileFromNativePathOrUrl()
-// we should be using real URLs all the time, but until
-// bug 239948 is fully fixed, this will do...
-//
-// note, this will thrown an exception if the native path
-// is not valid (for example a native Windows path on a Mac)
-// see bug #392386 for details
-function getLocalFileFromNativePathOrUrl(aPathOrUrl) {
-  if (aPathOrUrl.substring(0,7) == "file://") {
-    // if this is a URL, get the file from that
-    var ioSvc = Components.classes["@mozilla.org/network/io-service;1"].
-                getService(Components.interfaces.nsIIOService);
-
-    // XXX it's possible that using a null char-set here is bad
-    const fileUrl = ioSvc.newURI(aPathOrUrl, null, null).
-                    QueryInterface(Components.interfaces.nsIFileURL);
-    return fileUrl.file.clone().QueryInterface(Components.interfaces.nsILocalFile);
-  } else {
-    // if it's a pathname, create the nsILocalFile directly
-    var f = new nsLocalFile(aPathOrUrl);
-
-    return f;
-  }
-}
-
 /**
  * Helper function to replace a placeholder string with a real string
  *
@@ -417,6 +396,32 @@ function getLocalFileFromNativePathOrUrl(aPathOrUrl) {
 function replaceInsert(aText, aIndex, aValue)
 {
   return aText.replace("#" + aIndex, aValue);
+}
+
+// -- copied from downloads.js: getLocalFileFromNativePathOrUrl()
+// we should be using real URLs all the time, but until
+// bug 239948 is fully fixed, this will do...
+//
+// note, this will thrown an exception if the native path
+// is not valid (for example a native Windows path on a Mac)
+// see bug #392386 for details
+function getLocalFileFromNativePathOrUrl(aPathOrUrl)
+{
+  if (aPathOrUrl.match(/^file:\/\//)) {
+    // if this is a URL, get the file from that
+    var ioSvc = Components.classes["@mozilla.org/network/io-service;1"].
+                getService(Components.interfaces.nsIIOService);
+
+    // XXX it's possible that using a null char-set here is bad
+    const fileUrl = ioSvc.newURI(aPathOrUrl, null, null).
+                    QueryInterface(Components.interfaces.nsIFileURL);
+    return fileUrl.file.clone().QueryInterface(Components.interfaces.nsILocalFile);
+  } else {
+    // if it's a pathname, create the nsILocalFile directly
+    var f = new nsLocalFile(aPathOrUrl);
+
+    return f;
+  }
 }
 
 var dlTreeController = {
@@ -441,53 +446,43 @@ var dlTreeController = {
 
   isCommandEnabled: function(aCommand)
   {
-    // we can even enable some commands when we have no selection
-    var ignoreSelection = (aCommand == "cmd_selectAll" ||
-                           aCommand == "cmd_clearList");
-
     var selectionCount = 0;
     if (gDownloadTreeView && gDownloadTreeView.selection)
       selectionCount = gDownloadTreeView.selection.count;
-    if (!ignoreSelection && !selectionCount) return false;
 
-    var selItemData = selectionCount
-                      ? gDownloadTreeView.getRowData(gDownloadTree.currentIndex)
-                      : null;
+    var selItemData = selectionCount ?
+                      gDownloadTreeView.getRowData(gDownloadTree.currentIndex) :
+                      null;
 
     switch (aCommand) {
       case "cmd_pause":
-        var download = gDownloadManager.getDownload(selItemData.dlid);
         return selectionCount == 1 &&
                selItemData.isActive &&
                selItemData.state != nsIDownloadManager.DOWNLOAD_PAUSED &&
-               download.resumable;
+               gDownloadManager.getDownload(selItemData.dlid).resumable;
       case "cmd_resume":
-        var download = gDownloadManager.getDownload(selItemData.dlid);
         return selectionCount == 1 &&
                selItemData.state == nsIDownloadManager.DOWNLOAD_PAUSED &&
-               download.resumable;
+               gDownloadManager.getDownload(selItemData.dlid).resumable;
       case "cmd_open":
       case "cmd_show":
         // we can't reveal until the download is complete, because we have not given
         // the file its final name until them.
-        var file = getLocalFileFromNativePathOrUrl(selItemData.file);
         return selectionCount == 1 &&
                selItemData.state == nsIDownloadManager.DOWNLOAD_FINISHED &&
-               file.exists();
+               getLocalFileFromNativePathOrUrl(selItemData.file).exists();
       case "cmd_cancel":
-        // XXX handling multiple selection would be nice
         return selectionCount == 1 && selItemData.isActive;
       case "cmd_retry":
         return selectionCount == 1 &&
                (selItemData.state == nsIDownloadManager.DOWNLOAD_CANCELED ||
                 selItemData.state == nsIDownloadManager.DOWNLOAD_FAILED);
       case "cmd_remove":
-        // XXX handling multiple selection would be nice
         return selectionCount == 1 && !selItemData.isActive;
       case "cmd_openReferrer":
         return selectionCount == 1 && !!selItemData.referrer;
       case "cmd_copyLocation":
-        return true;
+        return selectionCount > 0;
       case "cmd_selectAll":
         return gDownloadTreeView.rowCount != selectionCount;
       case "cmd_clearList":
@@ -497,19 +492,15 @@ var dlTreeController = {
     }
   },
 
-  doCommand: function(aCommand){
-    // we can even enable some commands when we have no selection
-    var ignoreSelection = (aCommand == "cmd_selectAll" ||
-                           aCommand == "cmd_clearList");
-
+  doCommand: function(aCommand) {
     var selectionCount = 0;
     if (gDownloadTreeView && gDownloadTreeView.selection)
       selectionCount = gDownloadTreeView.selection.count;
     var selIdx = selectionCount == 1 ? gDownloadTree.currentIndex : -1;
     var selItemData = selectionCount == 1 ? gDownloadTreeView.getRowData(selIdx) : null;
 
-    var m_selIdx = [selIdx];
-    if (selectionCount > 1) {
+    var m_selIdx = [];
+    if (selectionCount) {
       m_selIdx = [];
       // walk all selected rows
       let start = {};
@@ -546,17 +537,13 @@ var dlTreeController = {
         showDownload(selItemData);
         break;
       case "cmd_openReferrer":
-        if (selItemData.referrer)
-          openUILink(selItemData.referrer);
-        // Otherwise, open the source
-        else
-          openUILink(selItemData.uri);
+        openUILink(selItemData.referrer);
         break;
       case "cmd_copyLocation":
         var clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
                                   .getService(Components.interfaces.nsIClipboardHelper);
         var uris = [];
-        for (let idx = 0; idx < m_selIdx.length; idx++) {
+        for each (let idx in m_selIdx) {
           let dldata = gDownloadTreeView.getRowData(idx);
           uris.push(dldata.uri);
         }

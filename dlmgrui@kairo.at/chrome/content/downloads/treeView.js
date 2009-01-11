@@ -48,28 +48,21 @@ function DownloadTreeView(aDownloadManager) {
 }
 
 DownloadTreeView.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([nsITreeView,
-                                         Components.interfaces.nsISupports]),
+  QueryInterface: XPCOMUtils.generateQI([nsITreeView]),
 
   // ***** nsITreeView attributes and methods *****
   get rowCount() {
     return this._dlList.length;
   },
 
-  get selection() {
-    return this._selection;
-  },
-
-  set selection(val) {
-    return this._selection = val;
-  },
+  selection: null,
 
   getRowProperties: function(aRow, aProperties) {
     var dl = this._dlList[aRow];
     var atomService = Components.classes["@mozilla.org/atom-service;1"]
                                 .getService(Components.interfaces.nsIAtomService);
-    // active/notActive
-    var activeAtom = atomService.getAtom(dl.isActive ? "active": "notActive");
+    // (in)active
+    var activeAtom = atomService.getAtom(dl.isActive ? "active": "inactive");
     aProperties.AppendElement(activeAtom);
     // Download states
     switch (dl.state) {
@@ -112,31 +105,24 @@ DownloadTreeView.prototype = {
   getLevel: function(aRow) { return 0; },
 
   getImageSrc: function(aRow, aColumn) {
-    switch (aColumn.id) {
-      case "Name":
-        return "moz-icon://" + this._dlList[aRow].file + "?size=16";
-    }
+    if (aColumn.id == "Name")
+      return "moz-icon://" + this._dlList[aRow].file + "?size=16";
     return "";
   },
 
   getProgressMode: function(aRow, aColumn) {
-    var dl = this._dlList[aRow];
-    switch (aColumn.id) {
-      case "Progress":
-        if (dl.isActive)
-          return (dl.maxBytes >= 0) ? nsITreeView.PROGRESS_NORMAL
-                                    : nsITreeView.PROGRESS_UNDETERMINED;
-        else
-          return nsITreeView.PROGRESS_NONE;
+    if (aColumn.id == "Progress") {
+      var dl = this._dlList[aRow];
+      if (dl.isActive)
+        return (dl.maxBytes >= 0) ? nsITreeView.PROGRESS_NORMAL :
+                                    nsITreeView.PROGRESS_UNDETERMINED;
     }
     return nsITreeView.PROGRESS_NONE;
   },
 
   getCellValue: function(aRow, aColumn) {
-    switch (aColumn.id) {
-      case "Progress":
-        return this._dlList[aRow].progress;
-    }
+    if (aColumn.id == "Progress")
+      return this._dlList[aRow].progress;
     return "";
   },
 
@@ -149,9 +135,7 @@ DownloadTreeView.prototype = {
       case "Status":
         switch (dl.state) {
           case nsIDownloadManager.DOWNLOAD_PAUSED:
-            return this._dlbundle.getFormattedString("pausedpct",
-              [DownloadUtils.getTransferTotal(dl.currBytes,
-                                              dl.maxBytes)]);
+            return this._dlbundle.getString("paused");
           case nsIDownloadManager.DOWNLOAD_DOWNLOADING:
             return this._dlbundle.getString("downloading");
           case nsIDownloadManager.DOWNLOAD_FINISHED:
@@ -288,7 +272,8 @@ DownloadTreeView.prototype = {
       endTime: Date.now(),
       referrer: null,
       currBytes: aDownload.amountTransferred,
-      maxBytes: aDownload.size
+      maxBytes: aDownload.size,
+      lastSec: Infinity, // For calculations of remaining time
     };
     switch (attrs.state) {
       case nsIDownloadManager.DOWNLOAD_NOTSTARTED:
@@ -302,8 +287,6 @@ DownloadTreeView.prototype = {
         attrs.isActive = 0;
         break;
     }
-    // Init lastSec for calculations of remaining time
-    attrs.lastSec = Infinity;
 
     // prepend in natural sorting
     attrs.listIndex = this._lastListIndex--;
@@ -316,6 +299,8 @@ DownloadTreeView.prototype = {
 
     // Data has changed, so re-sorting might be needed
     this.sortView("", "");
+
+    window.updateCommands("tree-select");
   },
 
   updateDownload: function(aDownload) {
@@ -357,6 +342,8 @@ DownloadTreeView.prototype = {
 
     // Data has changed, so re-sorting might be needed
     this.sortView("", "");
+
+    window.updateCommands("tree-select");
   },
 
   removeDownload: function(aDownloadID) {
@@ -386,7 +373,7 @@ DownloadTreeView.prototype = {
 
     this._statement = this._dm.DBConnection.createStatement(
       "SELECT id, target, name, source, state, startTime, endTime, referrer, " +
-            "currBytes, maxBytes, state IN (?1, ?2, ?3, ?4, ?5) isActive " +
+            "currBytes, maxBytes, state IN (?1, ?2, ?3, ?4, ?5) AS isActive " +
       "FROM moz_downloads " +
       "ORDER BY isActive DESC, endTime DESC, startTime DESC");
 
@@ -408,16 +395,14 @@ DownloadTreeView.prototype = {
         endTime: Math.round(this._statement.getInt64(6) / 1000),
         referrer: this._statement.getString(7),
         currBytes: this._statement.getInt64(8),
-        maxBytes: this._statement.getInt64(9)
+        maxBytes: this._statement.getInt64(9),
+        lastSec: Infinity, // For calculations of remaining time
       };
 
       // If the download is active, grab the real progress, otherwise default 100
       attrs.isActive = this._statement.getInt32(10);
-      attrs.progress = attrs.isActive
-                         ? this._dm.getDownload(attrs.dlid).percentComplete
-                         : 100;
-      // Init lastSec for calculations of remaining time
-      attrs.lastSec = Infinity;
+      attrs.progress = attrs.isActive ?
+                       this._dm.getDownload(attrs.dlid).percentComplete : 100;
 
       // Only actually add item to the tree if it's active or matching search
 
@@ -427,11 +412,13 @@ DownloadTreeView.prototype = {
       var combinedSearch = attrs.file.toLowerCase() + " " + attrs.uri.toLowerCase();
 
       var matchSearch = true;
-      for each (let term in this._searchTerms)
-        if (combinedSearch.search(term) == -1)
-          matchSearch = false;
+      if (!attrs.isActive)
+        for each (let term in this._searchTerms)
+          if (combinedSearch.search(term) == -1)
+            matchSearch = false;
 
-      if (attrs.isActive || matchSearch) {
+      // matchSearch is always true for active downloads, see above
+      if (matchSearch) {
         attrs.listIndex = this._lastListIndex++;
         this._dlList.push(attrs);
       }
@@ -459,8 +446,7 @@ DownloadTreeView.prototype = {
     var prevSearch = this._searchTerms.join(" ");
 
     // Array of space-separated lower-case search terms
-    this._searchTerms = aInput.replace(/^\s+|\s+$/g, "")
-                              .toLowerCase().split(/\s+/);
+    this._searchTerms = aInput.trim().toLowerCase().split(/\s+/);
 
     // Don't rebuild the download list if the search didn't change
     if (this._searchTerms.join(" ") == prevSearch)
@@ -572,7 +558,6 @@ DownloadTreeView.prototype = {
   // ***** local member vars *****
 
   _tree: null,
-  _selection: null,
   _dlBundle: null,
   _statement: null,
   _lastListIndex: 0,

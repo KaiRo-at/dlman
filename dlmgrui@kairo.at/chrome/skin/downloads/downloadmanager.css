@@ -39,17 +39,12 @@
 
 /* Note to themers:
    On rows and all cells, those properties for download states are available:
-   active, notActive, paused, downloading, finished, failed, canceled, blocked
+   active, inactive, paused, downloading, finished, failed, canceled, blocked
 */
 
 #ActionPlay {
   list-style-image: url("chrome://mozapps/skin/downloads/downloadButtons.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-
-treechildren::-moz-tree-image(ActionPlay) {
-  list-style-image: none;
-  -moz-image-region: auto;
 }
 
 treechildren::-moz-tree-image(ActionPlay, downloading) {
@@ -76,18 +71,13 @@ treechildren::-moz-tree-image(ActionPlay, canceled) {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
-treechildren::-moz-tree-image(ActionStop) {
-  list-style-image: none;
-  -moz-image-region: auto;
-}
-
 treechildren::-moz-tree-image(ActionStop, active) {
   /* cancel */
   list-style-image: url("chrome://mozapps/skin/downloads/downloadButtons.png");
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
-treechildren::-moz-tree-image(ActionStop, notActive) {
+treechildren::-moz-tree-image(ActionStop, inactive) {
   /* remove */
   list-style-image: url("chrome://suitedlmgrui/skin/downloads/dl-remove.png");
   -moz-image-region: auto;

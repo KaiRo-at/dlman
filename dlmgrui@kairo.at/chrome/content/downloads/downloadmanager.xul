@@ -41,8 +41,8 @@
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % downloadsDTD SYSTEM "chrome://suitedlmgrui/locale/downloads/downloadmanager.dtd">
@@ -196,7 +196,6 @@
           <menuitem id="menu_close"/>
         </menupopup>
       </menu>
-
       <menu id="menu_Edit">
         <menupopup id="menu_EditPopup">
           <menuitem id="dlMenu_pause"
