@@ -64,6 +64,9 @@ DownloadTreeView.prototype = {
     // (in)active
     var activeAtom = atomService.getAtom(dl.isActive ? "active": "inactive");
     aProperties.AppendElement(activeAtom);
+    // resumable
+    if (dl.resumable)
+      aProperties.AppendElement(atomService.getAtom("resumable"));
     // Download states
     switch (dl.state) {
       case nsIDownloadManager.DOWNLOAD_PAUSED:
@@ -268,6 +271,7 @@ DownloadTreeView.prototype = {
       uri: aDownload.source.spec,
       state: aDownload.state,
       progress: aDownload.percentComplete,
+      resumable: aDownload.resumable,
       startTime: Math.round(aDownload.startTime / 1000),
       endTime: Date.now(),
       referrer: null,
@@ -316,6 +320,7 @@ DownloadTreeView.prototype = {
       this._dlList[row].currBytes = aDownload.amountTransferred;
       this._dlList[row].maxBytes = aDownload.size;
       this._dlList[row].progress = aDownload.percentComplete;
+      this._dlList[row].resumable = aDownload.resumable;
     }
     if (this._dlList[row].state != aDownload.state) {
       this._dlList[row].state = aDownload.state;
@@ -366,16 +371,16 @@ DownloadTreeView.prototype = {
     this._tree.beginUpdateBatch();
     this._dlList = [];
     this._lastListIndex = 0;
-    this._listSortCol = "";
-    this._listSortAsc = null;
 
     this.selection.clearSelection();
 
+    // sort in reverse and prepend to the list to get continuous list indexes
+    // with increasing negative numbers for default-sort in ascending order
     this._statement = this._dm.DBConnection.createStatement(
       "SELECT id, target, name, source, state, startTime, endTime, referrer, " +
             "currBytes, maxBytes, state IN (?1, ?2, ?3, ?4, ?5) AS isActive " +
       "FROM moz_downloads " +
-      "ORDER BY isActive DESC, endTime DESC, startTime DESC");
+      "ORDER BY isActive ASC, endTime ASC, startTime ASC");
 
     this._statement.bindInt32Parameter(0, nsIDownloadManager.DOWNLOAD_NOTSTARTED);
     this._statement.bindInt32Parameter(1, nsIDownloadManager.DOWNLOAD_DOWNLOADING);
@@ -401,14 +406,21 @@ DownloadTreeView.prototype = {
 
       // If the download is active, grab the real progress, otherwise default 100
       attrs.isActive = this._statement.getInt32(10);
-      attrs.progress = attrs.isActive ?
-                       this._dm.getDownload(attrs.dlid).percentComplete : 100;
+      if (attrs.isActive) {
+        var dld = this._dm.getDownload(attrs.dlid);
+        attrs.progress = dld.percentComplete;
+        attrs.resumable = dld.resumable;
+      }
+      else {
+        attrs.progress = 100;
+        attrs.resumable = false;
+      }
 
       // Only actually add item to the tree if it's active or matching search
 
       // Search through the download attributes that are shown to the user and
       // make it into one big string for easy combined searching
-      // XXX: toolkit uses the target, status and dateTime attributes of the XBL item
+      // XXX: toolkit uses the target, status and dateTime attributes of their XBL item
       var combinedSearch = attrs.file.toLowerCase() + " " + attrs.uri.toLowerCase();
 
       var matchSearch = true;
@@ -419,22 +431,16 @@ DownloadTreeView.prototype = {
 
       // matchSearch is always true for active downloads, see above
       if (matchSearch) {
-        attrs.listIndex = this._lastListIndex++;
-        this._dlList.push(attrs);
+        attrs.listIndex = this._lastListIndex--;
+        this._dlList.unshift(attrs);
       }
     }
     this._statement.reset();
-    this._lastListIndex = 0; // we'll prepend other downloads with --!
     // find sorted column and sort the tree
     var sortedColumn = this._tree.columns.getSortedColumn();
     if (sortedColumn) {
       var direction = sortedColumn.element.getAttribute("sortDirection");
       this.sortView(sortedColumn.id, direction);
-    }
-    else {
-      // set cache values to default "unsorted" order
-      this._listSortCol = "unsorted";
-      this._listSortAsc = true;
     }
     this._tree.endUpdateBatch();
 
@@ -463,12 +469,16 @@ DownloadTreeView.prototype = {
   },
 
   sortView: function(aColumnID, aDirection) {
-    var sortAscending = aDirection == "ascending";
+    var sortAscending = aDirection != "descending";
 
-    if (aColumnID == "" && aDirection == "" && this._listSortCol != "") {
+    if (aColumnID == "" && aDirection == "") {
       // Re-sort in already selected/cached order
-      aColumnID = this._listSortCol;
-      sortAscending = this._listSortAsc;
+      var sortedColumn = this._tree.columns.getSortedColumn();
+      if (sortedColumn) {
+        aColumnID = sortedColumn.id;
+        sortAscending = sortedColumn.element.getAttribute("sortDirection") != "descending";
+      }
+      // no need for else, use default case of switch, sortAscending is true
     }
 
     // Compare function for two _dlList items
@@ -540,10 +550,6 @@ DownloadTreeView.prototype = {
     // Do the actual sorting of the array
     this._dlList.sort(compfunc);
 
-    // Cache column and direction for re-sorting
-    this._listSortCol = aColumnID;
-    this._listSortAsc = sortAscending;
-
     // Repaint the tree
     this._tree.invalidate();
 
@@ -561,8 +567,6 @@ DownloadTreeView.prototype = {
   _dlBundle: null,
   _statement: null,
   _lastListIndex: 0,
-  _listSortCol: "",
-  _listSortAsc: null,
   _selectionCache: null,
 
   // ***** local helper functions *****

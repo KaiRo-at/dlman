@@ -129,12 +129,10 @@ function sortDownloads(aEventTarget)
   if (column && column.getAttribute("cycler") == "true")
     return;
 
-  // Clear attributes on previously sorted column
+  // Clear attributes on all columns, we're setting them again after sorting
   for (let node = document.getElementById("Name"); node; node = node.nextSibling) {
-    if (node.getAttribute("sortActive") == "true" && node.id != colID)
-      node.removeAttribute("sortActive");
-    if (node.getAttribute("sortDirection") && node.id != colID)
-      node.removeAttribute("sortDirection");
+    node.removeAttribute("sortActive");
+    node.removeAttribute("sortDirection");
   }
 
   if (!sortDirection) {
@@ -362,40 +360,28 @@ function onUpdateProgress()
 
   // Calculate the percent transferred, unless we don't have a total file size
   var dlbundle = document.getElementById("dmBundle");
-  var title = dlbundle.getString("downloadsTitlePercent");
+  var title;
   if (base == 0)
-    title = dlbundle.getString("downloadsTitleFiles");
+    title = dlbundle.getFormattedString("downloadsTitleFiles",
+                                        [numActiveDownloads]);
   else
     mean = Math.floor((mean / base) * 100);
+
 
   // Update title of window
   if (mean != gLastComputedMean || gLastActiveDownloads != numActiveDownloads) {
     gLastComputedMean = mean;
     gLastActiveDownloads = numActiveDownloads;
 
+    if (base != 0)
+      title = dlbundle.getFormattedString("downloadsTitlePercent",
+                                          [numActiveDownloads, mean]);
+
     // Get the correct plural form and insert number of downloads and percent
     title = PluralForm.get(numActiveDownloads, title);
-    title = replaceInsert(title, 1, numActiveDownloads);
-    title = replaceInsert(title, 2, mean);
 
     document.title = title;
   }
-}
-
-/**
- * Helper function to replace a placeholder string with a real string
- *
- * @param aText
- *        Source text containing placeholder (e.g., #1)
- * @param aIndex
- *        Index number of placeholder to replace
- * @param aValue
- *        New string to put in place of placeholder
- * @return The string with placeholder replaced with the new string
- */
-function replaceInsert(aText, aIndex, aValue)
-{
-  return aText.replace("#" + aIndex, aValue);
 }
 
 // -- copied from downloads.js: getLocalFileFromNativePathOrUrl()
@@ -412,7 +398,6 @@ function getLocalFileFromNativePathOrUrl(aPathOrUrl)
     var ioSvc = Components.classes["@mozilla.org/network/io-service;1"].
                 getService(Components.interfaces.nsIIOService);
 
-    // XXX it's possible that using a null char-set here is bad
     const fileUrl = ioSvc.newURI(aPathOrUrl, null, null).
                     QueryInterface(Components.interfaces.nsIFileURL);
     return fileUrl.file.clone().QueryInterface(Components.interfaces.nsILocalFile);
@@ -459,11 +444,11 @@ var dlTreeController = {
         return selectionCount == 1 &&
                selItemData.isActive &&
                selItemData.state != nsIDownloadManager.DOWNLOAD_PAUSED &&
-               gDownloadManager.getDownload(selItemData.dlid).resumable;
+               selItemData.resumable;
       case "cmd_resume":
         return selectionCount == 1 &&
                selItemData.state == nsIDownloadManager.DOWNLOAD_PAUSED &&
-               gDownloadManager.getDownload(selItemData.dlid).resumable;
+               selItemData.resumable;
       case "cmd_open":
       case "cmd_show":
         // we can't reveal until the download is complete, because we have not given
@@ -572,7 +557,7 @@ var dlTreeController = {
 
         // Clear the input as if the user did it and move focus to the list
         gSearchBox.value = "";
-        gSearchBox.doCommand();
+        searchDownloads("");
         gDownloadTree.focus();
         break;
     }

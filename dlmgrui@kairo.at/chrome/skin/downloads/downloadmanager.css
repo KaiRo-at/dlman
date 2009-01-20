@@ -47,13 +47,13 @@
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
-treechildren::-moz-tree-image(ActionPlay, downloading) {
+treechildren::-moz-tree-image(ActionPlay, downloading, resumable) {
   /* pause */
   list-style-image: url("chrome://mozapps/skin/downloads/downloadButtons.png");
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
-treechildren::-moz-tree-image(ActionPlay, paused) {
+treechildren::-moz-tree-image(ActionPlay, paused, resumable) {
   /* resume */
   list-style-image: url("chrome://mozapps/skin/downloads/downloadButtons.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
