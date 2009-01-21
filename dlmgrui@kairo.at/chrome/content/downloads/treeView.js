@@ -407,7 +407,7 @@ DownloadTreeView.prototype = {
       // If the download is active, grab the real progress, otherwise default 100
       attrs.isActive = this._statement.getInt32(10);
       if (attrs.isActive) {
-        var dld = this._dm.getDownload(attrs.dlid);
+        let dld = this._dm.getDownload(attrs.dlid);
         attrs.progress = dld.percentComplete;
         attrs.resumable = dld.resumable;
       }

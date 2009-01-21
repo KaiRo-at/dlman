@@ -39,7 +39,7 @@
 
 /* Note to themers:
    On rows and all cells, those properties for download states are available:
-   active, inactive, paused, downloading, finished, failed, canceled, blocked
+   active, inactive, resumable, paused, downloading, finished, failed, canceled, blocked
 */
 
 #ActionPlay {
