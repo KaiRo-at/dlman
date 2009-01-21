@@ -95,16 +95,14 @@ function sortDownloads(aEventTarget)
   var sortDirection = null;
 
   // If the target is a menuitem, handle it and forward to a column
-  if (colID.match(/^menu_SortBy/)) {
+  if (/^menu_SortBy/.test(colID)) {
     colID = colID.replace(/^menu_SortBy/, "");
     column = document.getElementById(colID);
     var sortedColumn = gDownloadTree.columns.getSortedColumn();
-    if (sortedColumn && sortedColumn.id == colID) {
+    if (sortedColumn && sortedColumn.id == colID)
       sortDirection = sortedColumn.element.getAttribute("sortDirection");
-    }
-    else {
+    else
       sortDirection = "ascending";
-    }
   }
   else if (colID == "menu_Unsorted") {
     // calling .sortView() with an "unsorted" colID returns us to original order
@@ -196,7 +194,7 @@ function openDownload(aDownloadData)
     try {
       var sysInfo = Components.classes["@mozilla.org/system-info;1"]
                               .getService(Components.interfaces.nsIPropertyBag2);
-      if (sysInfo.getProperty("name").match(/^Windows/) &&
+      if (/^Windows/.test(sysInfo.getProperty("name")) &&
           (parseFloat(sysInfo.getProperty("version")) >= 6))
         alertOnEXEOpen = false;
     } catch (ex) { }
@@ -393,7 +391,7 @@ function onUpdateProgress()
 // see bug #392386 for details
 function getLocalFileFromNativePathOrUrl(aPathOrUrl)
 {
-  if (aPathOrUrl.match(/^file:\/\//)) {
+  if (/^file:\/\//.test(aPathOrUrl)) {
     // if this is a URL, get the file from that
     var ioSvc = Components.classes["@mozilla.org/network/io-service;1"].
                 getService(Components.interfaces.nsIIOService);
