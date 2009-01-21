@@ -129,16 +129,16 @@ function sortDownloads(aEventTarget)
   if (column && column.getAttribute("cycler") == "true")
     return;
 
-  // Clear attributes on all columns, we're setting them again after sorting
-  for (let node = document.getElementById("Name"); node; node = node.nextSibling) {
-    node.removeAttribute("sortActive");
-    node.removeAttribute("sortDirection");
-  }
-
   if (!sortDirection) {
     // If not set above already, toggle the current direction
     sortDirection = column.getAttribute("sortDirection") == "ascending" ?
                     "descending" : "ascending";
+  }
+
+  // Clear attributes on all columns, we're setting them again after sorting
+  for (let node = document.getElementById("Name"); node; node = node.nextSibling) {
+    node.removeAttribute("sortActive");
+    node.removeAttribute("sortDirection");
   }
 
   // Actually sort the tree view

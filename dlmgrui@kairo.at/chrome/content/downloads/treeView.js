@@ -390,7 +390,7 @@ DownloadTreeView.prototype = {
 
     while (this._statement.executeStep()) {
       // Try to get the attribute values from the statement
-      var attrs = {
+      let attrs = {
         dlid: this._statement.getInt64(0),
         file: this._statement.getString(1),
         target: this._statement.getString(2),
