@@ -358,20 +358,19 @@ function onUpdateProgress()
 
   // Calculate the percent transferred, unless we don't have a total file size
   var dlbundle = document.getElementById("dmBundle");
-  var title;
-  if (base == 0)
-    title = dlbundle.getFormattedString("downloadsTitleFiles",
-                                        [numActiveDownloads]);
-  else
+  if (base != 0)
     mean = Math.floor((mean / base) * 100);
-
 
   // Update title of window
   if (mean != gLastComputedMean || gLastActiveDownloads != numActiveDownloads) {
     gLastComputedMean = mean;
     gLastActiveDownloads = numActiveDownloads;
 
-    if (base != 0)
+    var title;
+    if (base == 0)
+      title = dlbundle.getFormattedString("downloadsTitleFiles",
+                                          [numActiveDownloads]);
+    else
       title = dlbundle.getFormattedString("downloadsTitlePercent",
                                           [numActiveDownloads, mean]);
 
