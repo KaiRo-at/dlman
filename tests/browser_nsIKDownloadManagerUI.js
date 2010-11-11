@@ -82,7 +82,7 @@ function test()
 
   // OK, now that all the data is in, let's pull up the UI
   Components.classes["@mozilla.org/download-manager-ui;1"]
-            .getService(Components.interfaces.nsISuiteDownloadManagerUI).showManager();
+            .getService(Components.interfaces.nsIKDownloadManagerUI).showManager();
 
   let obs = Components.classes["@mozilla.org/observer-service;1"]
                       .getService(Components.interfaces.nsIObserverService);

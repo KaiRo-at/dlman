@@ -67,10 +67,8 @@ nsDownloadManagerUI.prototype = {
     var behavior = 0;
     if (aReason != Ci.nsIDownloadManagerUI.REASON_USER_INTERACTED) {
       try {
-        var prefs = Cc["@mozilla.org/preferences-service;1"].
-                    getService(Ci.nsIPrefBranch);
-        behavior = prefs.getIntPref(PREF_DM_BEHAVIOR);
-        if (prefs.getBoolPref(PREF_FORCE_TOOLKIT_UI))
+        behavior = Services.prefs.getIntPref(PREF_DM_BEHAVIOR);
+        if (Services.prefs.getBoolPref(PREF_FORCE_TOOLKIT_UI))
           behavior = 0; //We are forcing toolkit UI, force manager behavior
       } catch (e) { }
     }
@@ -95,12 +93,10 @@ nsDownloadManagerUI.prototype = {
     if (!this.visible)
       throw Cr.NS_ERROR_UNEXPECTED;
 
-    var prefs = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefBranch);
     // This preference may not be set, so defaulting to two.
     var flashCount = 2;
     try {
-      flashCount = prefs.getIntPref(PREF_FLASH_COUNT);
+      flashCount = Services.prefs.getIntPref(PREF_FLASH_COUNT);
     } catch (e) { }
 
     this.recentWindow.getAttentionWithCycleCount(flashCount);
@@ -116,7 +112,8 @@ nsDownloadManagerUI.prototype = {
   },
 
   //////////////////////////////////////////////////////////////////////////////
-  //// nsISuiteDownloadManagerUI
+  //// nsIKDownloadManagerUI
+
   showManager: function showManager(aWindowContext, aID, aReason)
   {
     // First we see if it is already visible
@@ -161,19 +158,24 @@ nsDownloadManagerUI.prototype = {
 
     var manager = DOWNLOAD_MANAGER_URL;
     try {
-      let prefs = Cc["@mozilla.org/preferences-service;1"].
-                  getService(Ci.nsIPrefBranch);
-      if (prefs.getBoolPref(PREF_FORCE_TOOLKIT_UI))
-        manager = TOOLKIT_MANAGER_URL;
+      if (Services.prefs.getBoolPref(PREF_FORCE_TOOLKIT_UI))
+        Services.ww.openWindow(parent,
+                               TOOLKIT_MANAGER_URL,
+                               null,
+                               "all,dialog=no",
+                               params);
     } catch(ex) {}
 
-    var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-             getService(Ci.nsIWindowWatcher);
-    ww.openWindow(parent,
-                  manager,
-                  null,
-                  "all,dialog=no",
-                  params);
+    var win = Services.wm.getMostRecentWindow("navigator:browser");
+    if (!win)
+      win = Services.ww.openWindow("_blank",
+                                   this._getBrowserURL(),
+                                   null,
+                                   "chrome,all,dialog=no",
+                                   null);
+    win.switchToTabHavingURI(DOWNLOAD_MANAGER_URL, true, function(browser) {
+      browser.contentWindow.wrappedJSObject.arguments = params;
+    });
   },
 
   showProgress: function showProgress(aWindowContext, aID, aReason)
@@ -209,11 +211,25 @@ nsDownloadManagerUI.prototype = {
                   "chrome,titlebar,centerscreen,minimizable=yes,dialog=no",
                   params);
   },
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// private
+
+  _getBrowserURL: function _getBrowserURL() {
+    try {
+      var url = Services.prefs.getCharPref("browser.chromeURL");
+      if (url)
+        return url;
+    } catch(e) {
+    }
+    return "chrome://browser/content/browser.xul";
+  },
+
   //////////////////////////////////////////////////////////////////////////////
   //// nsISupports
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDownloadManagerUI,
-                                         Ci.nsISuiteDownloadManagerUI])
+                                         Ci.nsIKDownloadManagerUI])
 };
 
 ////////////////////////////////////////////////////////////////////////////////

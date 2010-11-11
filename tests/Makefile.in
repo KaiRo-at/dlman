@@ -44,7 +44,7 @@ relativesrcdir = extensions/dlman/tests
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
-    browser_nsISuiteDownloadManagerUI.js \
+    browser_nsIKDownloadManagerUI.js \
     $(NULL)
 
 libs:: $(_BROWSER_FILES)

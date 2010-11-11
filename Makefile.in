@@ -47,7 +47,8 @@ ifdef ENABLE_TESTS
 PARALLEL_DIRS += tests
 endif
 
-MODULE       = dlman
+MODULE                 = dlman
+XPIDL_MODULE           = dlman
 
 EXTENSION_VERSION      = 0.1
 
@@ -58,9 +59,18 @@ NO_JS_MANIFEST         = 1
 INSTALL_EXTENSION_ID   = dlman@kairo.at
 XPI_PKGNAME            = dlman-$(EXTENSION_VERSION)
 
-DIST_FILES = install.rdf
+DIST_FILES = \
+  install.rdf \
+  $(NULL)
 
-EXTRA_COMPONENTS = aboutDownloads.js
+EXTRA_COMPONENTS = \
+  aboutDownloads.js \
+  dlmanUI.js \
+  $(NULL)
+
+XPIDLSRCS = \
+  nsIKDownloadManagerUI.idl \
+  $(NULL)
 
 # include config.mk before using the AB_CD var
 include $(topsrcdir)/config/config.mk
