@@ -42,43 +42,87 @@
    active, inactive, resumable, paused, downloading, finished, failed, canceled, blocked
 */
 
-#ActionPlay {
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadButtons.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+treechildren::-moz-tree-image(Name) {
+  -moz-margin-end: 2px;
 }
 
+#pauseButton,
 treechildren::-moz-tree-image(ActionPlay, downloading, resumable) {
   /* pause */
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadButtons.png");
+  list-style-image: url("chrome://dlman/skin/downloadButtons.png");
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
+#ActionPlay,
+#resumeButton,
 treechildren::-moz-tree-image(ActionPlay, paused, resumable) {
   /* resume */
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadButtons.png");
+  list-style-image: url("chrome://dlman/skin/downloadButtons.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
+#retryButton,
 treechildren::-moz-tree-image(ActionPlay, failed),
 treechildren::-moz-tree-image(ActionPlay, canceled) {
   /* retry */
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadButtons.png");
+  list-style-image: url("chrome://dlman/skin/downloadButtons.png");
   -moz-image-region: rect(0px, 64px, 16px, 48px);
 }
 
-#ActionStop {
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadButtons.png");
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-
+#ActionStop,
+#cancelButton,
 treechildren::-moz-tree-image(ActionStop, active) {
   /* cancel */
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadButtons.png");
+  list-style-image: url("chrome://dlman/skin/downloadButtons.png");
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
 treechildren::-moz-tree-image(ActionStop, inactive) {
   /* remove */
-  list-style-image: url("chrome://suitedlmgrui/skin/downloads/dl-remove.png");
+  list-style-image: url("chrome://dlman/skin/dl-remove.png");
   -moz-image-region: auto;
+}
+
+/* progress dialogs */
+#dlProgressWindow {
+  /* match dialog.css */
+  padding-top: 8px;
+  padding-bottom: 10px;
+  -moz-padding-start: 8px;
+  -moz-padding-end: 10px;
+}
+
+/* label with dropdown, actually done as a button type=menu */
+#fileName, #fileSource {
+  -moz-appearance: none;
+  background-color: transparent;
+  margin: 0px 5px;
+  border: 0px;
+  min-width: 0px;
+  min-height: 0px;
+}
+
+#fileName > .button-box,
+#fileSource > .button-box {
+  -moz-appearance: none;
+  padding: 0px;
+}
+
+#fileName {
+  font-weight: bold;
+}
+
+.mini-button {
+  -moz-appearance: none;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
+}
+
+.mini-button > .button-box {
+  -moz-appearance: none;
+  padding: 0 !important;
 }

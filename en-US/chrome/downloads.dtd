@@ -3,7 +3,7 @@
 <!ENTITY menuBar.tooltip                 "Menu Bar">
 <!ENTITY searchBar.tooltip               "Search Bar">
 
-<!ENTITY search.emptytext                "Search Downloads">
+<!ENTITY search.placeholder              "Search Downloads">
 <!ENTITY search.label                    "Search Downloads">
 <!ENTITY search.accesskey                "S">
 <!ENTITY search.key                      "f">
@@ -39,6 +39,12 @@
 <!ENTITY col.timeelapsed.label           "Time Elapsed">
 <!ENTITY col.timeelapsed.accesskey       "E">
 <!ENTITY col.timeelapsed.tooltip         "Time Elapsed">
+<!ENTITY col.starttime.label             "Start Time">
+<!ENTITY col.starttime.accesskey         "a">
+<!ENTITY col.starttime.tooltip           "Start Time">
+<!ENTITY col.endtime.label               "End Time">
+<!ENTITY col.endtime.accesskey           "i">
+<!ENTITY col.endtime.tooltip             "End Time">
 <!ENTITY col.progresstext.label          "&#37;">
 <!ENTITY col.progresstext.accesskey      "&#37;">
 <!ENTITY col.progresstext.tooltip        "Progress (&#37;)">
@@ -63,7 +69,7 @@
 <!ENTITY cmd.resume.label                "Resume">
 <!ENTITY cmd.resume.accesskey            "R">
 <!ENTITY cmd.retry.label                 "Retry">
-<!ENTITY cmd.retry.accesskey             "R">
+<!ENTITY cmd.retry.accesskey             "t">
 <!ENTITY cmd.cancel.label                "Cancel">
 <!ENTITY cmd.cancel.accesskey            "C">
 <!ENTITY cmd.remove.label                "Remove From List">
@@ -76,3 +82,5 @@
 <!ENTITY cmd.goToDownloadPage.accesskey  "G">
 <!ENTITY cmd.copyDownloadLink.label      "Copy Download Link">
 <!ENTITY cmd.copyDownloadLink.accesskey  "L">
+<!ENTITY cmd.properties.label            "Properties…">
+<!ENTITY cmd.properties.accesskey        "s">
