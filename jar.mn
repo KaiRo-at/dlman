@@ -8,12 +8,11 @@ dlman.jar:
 % overlay chrome://communicator/content/tasksOverlay.xul chrome://dlman/content/overlaySM.xul application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
 % component {5f9b6b0d-d2d5-4381-afc4-27625c3e1668} components/aboutDownloads.js
 % contract @mozilla.org/network/protocol/about;1?what=downloads {5f9b6b0d-d2d5-4381-afc4-27625c3e1668}
-  content/dlman/downloads.css               (content/downloads.css)
   content/dlman/downloads.js                (content/downloads.js)
   content/dlman/downloads.xul               (content/downloads.xul)
-  content/dlman/overlay.js                  (content/overlay.js)
-  content/dlman/overlayFF.xul               (content/overlayFF.xul)
-  content/dlman/overlaySM.xul               (content/overlaySM.xul)
+#  content/dlman/overlay.js                  (content/overlay.js)
+#  content/dlman/overlayFF.xul               (content/overlayFF.xul)
+#  content/dlman/overlaySM.xul               (content/overlaySM.xul)
   content/dlman/progressDialog.js           (content/progressDialog.js)
   content/dlman/progressDialog.xul          (content/progressDialog.xul)
   skin/classic/dlman/dl-remove.png          (skin/classic/dl-remove.png)
