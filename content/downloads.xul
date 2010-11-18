@@ -36,12 +36,10 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://dlman/skin/downloads.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
 <!DOCTYPE window [
@@ -193,10 +191,33 @@
   </popupset>
 
   <toolbox id="download-toolbox">
-    <menubar id="download-menubar"
-             grippytooltiptext="&menuBar.tooltip;">
-      <menu id="menu_File">
-        <menupopup id="menu_FilePopup">
+    <toolbar class="chromeclass-toolbar"
+             id="downloadToolbar"
+             align="center"
+             grippytooltiptext="&searchBar.tooltip;">
+      <toolbarbutton id="downloadButton"
+                     type="menu"
+                     class="tabbable"
+                     label="&btn.download.label;"
+                     accesskey="&btn.download.accesskey;">
+        <menupopup id="menu_DownloadPopup">
+          <menuitem id="dlMenu_pause"
+                    label="&cmd.pause.label;"
+                    accesskey="&cmd.pause.accesskey;"
+                    command="cmd_pause"/>
+          <menuitem id="dlMenu_resume"
+                    label="&cmd.resume.label;"
+                    accesskey="&cmd.resume.accesskey;"
+                    command="cmd_resume"/>
+          <menuitem id="dlMenu_retry"
+                    label="&cmd.retry.label;"
+                    accesskey="&cmd.retry.accesskey;"
+                    command="cmd_retry"/>
+          <menuitem id="dlMenu_cancel"
+                    label="&cmd.cancel.label;"
+                    accesskey="&cmd.cancel.accesskey;"
+                    command="cmd_cancel"/>
+          <menuseparator/>
           <menuitem id="dlMenu_open"
                     label="&cmd.open.label;"
                     accesskey="&cmd.open.accesskey;"
@@ -215,28 +236,6 @@
                     accesskey="&cmd.properties.accesskey;"
                     command="cmd_properties"/>
           <menuseparator/>
-          <menuitem id="menu_close"/>
-        </menupopup>
-      </menu>
-      <menu id="menu_Edit">
-        <menupopup id="menu_EditPopup">
-          <menuitem id="dlMenu_pause"
-                    label="&cmd.pause.label;"
-                    accesskey="&cmd.pause.accesskey;"
-                    command="cmd_pause"/>
-          <menuitem id="dlMenu_resume"
-                    label="&cmd.resume.label;"
-                    accesskey="&cmd.resume.accesskey;"
-                    command="cmd_resume"/>
-          <menuitem id="dlMenu_retry"
-                    label="&cmd.retry.label;"
-                    accesskey="&cmd.retry.accesskey;"
-                    command="cmd_retry"/>
-          <menuitem id="dlMenu_cancel"
-                    label="&cmd.cancel.label;"
-                    accesskey="&cmd.cancel.accesskey;"
-                    command="cmd_cancel"/>
-          <menuseparator/>
           <menuitem id="dlMenu_remove"
                     label="&cmd.remove.label;"
                     accesskey="&cmd.remove.accesskey;"
@@ -245,16 +244,20 @@
                     label="&cmd.copyDownloadLink.label;"
                     accesskey="&cmd.copyDownloadLink.accesskey;"
                     command="cmd_copyLocation"/>
-          <menuseparator/>
+       </menupopup>
+      </toolbarbutton>
+      <toolbarbutton id="listButton"
+                     type="menu"
+                     class="tabbable"
+                     label="&btn.list.label;"
+                     accesskey="&btn.list.accesskey;">
+        <menupopup id="menu_ListPopup">
           <menuitem id="dlMenu_clearList"
                     label="&cmd.clearList.label;"
                     accesskey="&cmd.clearList.accesskey;"
                     command="cmd_clearList"/>
           <menuitem id="menu_selectAll"/>
-        </menupopup>
-      </menu>
-      <menu id="menu_View">
-        <menupopup id="menu_ViewPopup">
+          <menuseparator/>
           <menu id="menu_ViewColumns"
                 label="&view.columns.label;"
                 accesskey="&view.columns.accesskey;">
@@ -352,35 +355,14 @@
             </menupopup>
           </menu>
         </menupopup>
-      </menu>
-      <menu id="tasksMenu">
-        <menupopup id="taskPopup">
-          <menuitem id="dlMenu_find"
-                    label="&search.label;"
-                    accesskey="&search.accesskey;"
-                    command="cmd_search_focus"
-                    key="key_search_focus"/>
-          <menuseparator/>
-        </menupopup>
-      </menu>
-      <menu id="windowMenu"/>
-      <menu id="menu_Help"/>
-    </menubar>
-    <toolbar class="chromeclass-toolbar"
-             id="downloadToolbar"
-             align="center"
-             grippytooltiptext="&searchBar.tooltip;">
+      </toolbarbutton>
+      <spacer flex="1"/>
       <textbox id="search-box"
                clickSelectsAll="true"
                type="search"
                class="compact"
                placeholder="&search.placeholder;"
                oncommand="searchDownloads(this.value);"/>
-      <spacer flex="1"/>
-      <button id="clearListButton" command="cmd_clearList"
-              label="&cmd.clearList.label;"
-              accesskey="&cmd.clearList.accesskey;"
-              tooltiptext="&cmd.clearList.tooltip;"/>
     </toolbar>
   </toolbox>
 

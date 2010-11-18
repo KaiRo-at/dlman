@@ -52,6 +52,10 @@
 <!ENTITY col.source.accesskey            "o">
 <!ENTITY col.source.tooltip              "Source">
 
+<!ENTITY btn.download.label              "Download">
+<!ENTITY btn.download.accesskey          "D">
+<!ENTITY btn.list.label                  "List">
+<!ENTITY btn.list.accesskey              "L">
 <!ENTITY view.columns.label              "Show Columns">
 <!ENTITY view.columns.accesskey          "C">
 <!ENTITY view.sortBy.label               "Sort by">

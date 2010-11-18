@@ -13,6 +13,7 @@ dlman.jar:
   content/dlman/progressDialog.js           (content/progressDialog.js)
   content/dlman/progressDialog.xul          (content/progressDialog.xul)
   skin/classic/dlman/dl-remove.png          (skin/classic/dl-remove.png)
+  skin/classic/dlman/downloadButtons.png    (skin/classic/downloadButtons.png)
   skin/classic/dlman/downloads.css          (skin/classic/downloads.css)
   locale/@AB_CD@/dlman/downloads.dtd        (%chrome/downloads.dtd)
   locale/@AB_CD@/dlman/downloads.properties (%chrome/downloads.properties)
