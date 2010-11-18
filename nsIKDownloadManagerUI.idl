@@ -38,9 +38,12 @@
 #include "nsISupports.idl"
 #include "nsIDownloadManagerUI.idl"
 
+interface nsIDOMWindowInternal;
+
 [scriptable, uuid(bfac4b43-ddc9-4910-abb8-3287377e48e2)]
 interface nsIKDownloadManagerUI : nsIDownloadManagerUI
 {
+  attribute nsIDOMWindowInternal recentWindow;
   void showManager([optional] in nsIInterfaceRequestor aWindowContext,
                     [optional] in unsigned long aID,
                     [optional] in short aReason);

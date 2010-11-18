@@ -103,12 +103,25 @@ nsDownloadManagerUI.prototype = {
   },
 
   //////////////////////////////////////////////////////////////////////////////
-  //// nsDownloadManagerUI
+  //// nsIKDownloadManagerUI / nsDownloadManagerUI
 
   get recentWindow() {
-    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-             getService(Ci.nsIWindowMediator);
-    return wm.getMostRecentWindow("Download:Manager");
+    let winEnum = Services.wm.getEnumerator("navigator:browser");
+    while (winEnum.hasMoreElements()) {
+      let browserWin = winEnum.getNext();
+      // Skip closed (but not yet destroyed) windows,
+      // and any window without a browser object.
+      if (browserWin.closed || !browserWin.gBrowser)
+        continue;
+      let browsers = browserWin.gBrowser.browsers;
+      for (let i = 0; i < browsers.length; i++) {
+        let browser = browsers[i];
+        if (browser.currentURI.spec == DOWNLOAD_MANAGER_URL) {
+          return browser.contentWindow;
+        }
+      }
+    }
+    return null;
   },
 
   //////////////////////////////////////////////////////////////////////////////

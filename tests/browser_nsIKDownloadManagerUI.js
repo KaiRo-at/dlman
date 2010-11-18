@@ -73,12 +73,15 @@ function test()
   // First, we populate the database with some fake data
   db.executeSimpleSQL("DELETE FROM moz_downloads");
 
+  var dmui = Components.classes["@mozilla.org/download-manager-ui;1"]
+                       .getService(Components.interfaces.nsIKDownloadManagerUI);
+
   // See if the DM is already open, and if it is, close it!
-  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                     .getService(Components.interfaces.nsIWindowMediator);
-  var win = wm.getMostRecentWindow("Download:Manager");
+  var win = dmui.recentWindow;
   if (win)
     win.close();
+
+  gBrowser.addTab();
 
   // OK, now that all the data is in, let's pull up the UI
   Components.classes["@mozilla.org/download-manager-ui;1"]
@@ -91,7 +94,7 @@ function test()
   let testObs = {
     observe: function(aSubject, aTopic, aData) {
       obs.removeObserver(testObs, DLMGR_UI_DONE);
-      var win = wm.getMostRecentWindow("Download:Manager");
+      var win = dmui.recentWindow;
 
       // Now we can run our tests
       for each (var t in testFuncs)
