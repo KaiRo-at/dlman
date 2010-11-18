@@ -795,15 +795,7 @@ DownloadTreeView.prototype = {
       case "Name":
         return dl.target;
       case "Domain":
-        var dld = this._dm.getDownload(dl.dlid);
-        var fromString;
-        try {
-          fromString = dld.source.host;
-        }
-        catch (e) { }
-        if (!fromString)
-          fromString = dld.source.prePath;
-        return fromString;
+        return dl.domain;
       case "Status":
         switch (dl.state) {
           case nsIDownloadManager.DOWNLOAD_PAUSED:
@@ -958,6 +950,12 @@ DownloadTreeView.prototype = {
       maxBytes: aDownload.size,
       lastSec: Infinity, // For calculations of remaining time
     };
+    try {
+      attrs.domain = aDownload.source.host;
+    }
+    catch (e) { }
+    if (!attrs.domain)
+      attrs.domain = aDownload.source.prePath;
     switch (attrs.state) {
       case nsIDownloadManager.DOWNLOAD_NOTSTARTED:
       case nsIDownloadManager.DOWNLOAD_DOWNLOADING:
@@ -1095,6 +1093,13 @@ DownloadTreeView.prototype = {
         maxBytes: this._statement.getInt64(9),
         lastSec: Infinity, // For calculations of remaining time
       };
+      let sourceURI = Services.io.newURI(attrs.uri, null, null);
+      try {
+        attrs.domain = sourceURI.host;
+      }
+      catch (e) { }
+      if (!attrs.domain)
+        attrs.domain = sourceURI.prePath;
 
       // If the download is active, grab the real progress, otherwise default 100
       attrs.isActive = this._statement.getInt32(10);
@@ -1199,6 +1204,10 @@ DownloadTreeView.prototype = {
           comp_a = a.target.toLowerCase();
           comp_b = b.target.toLowerCase();
           break;
+        case "Domain":
+          comp_a = a.domain.toLowerCase();
+          comp_b = b.domain.toLowerCase();
+          break;
         case "Status":
           comp_a = a.state;
           comp_b = b.state;
@@ -1237,6 +1246,10 @@ DownloadTreeView.prototype = {
         case "EndTime":
           comp_a = a.endTime;
           comp_b = b.endTime;
+          break;
+        case "FullPath":
+          comp_a = getLocalFileFromNativePathOrUrl(a.file).path;
+          comp_b = getLocalFileFromNativePathOrUrl(b.file).path;
           break;
         case "Source":
           comp_a = a.uri;
