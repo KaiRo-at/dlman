@@ -50,7 +50,6 @@ var gDownloadTree;
 var gDownloadTreeView;
 var gDownloadManager = Components.classes["@mozilla.org/download-manager;1"]
                                  .getService(nsIDownloadManager);
-var gDownloadStatus;
 var gDownloadListener;
 var gSearchBox;
 var gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
@@ -59,7 +58,6 @@ var gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
 function dmStartup()
 {
   gDownloadTree = document.getElementById("downloadTree");
-  gDownloadStatus = document.getElementById("statusbar-display");
   gSearchBox = document.getElementById("search-box");
 
   // Insert as first controller on the whole window
@@ -298,15 +296,6 @@ function showProperties(aDownloadID)
 
 function onTreeSelect(aEvent)
 {
-  var selectionCount = gDownloadTreeView.selection.count;
-  if (selectionCount == 1) {
-    var selItemData = gDownloadTreeView.getRowData(gDownloadTree.currentIndex);
-    var file = getLocalFileFromNativePathOrUrl(selItemData.file);
-    gDownloadStatus.label = file.path;
-  } else {
-    gDownloadStatus.label = "";
-  }
-
   window.updateCommands("tree-select");
 }
 
@@ -805,6 +794,16 @@ DownloadTreeView.prototype = {
     switch (aColumn.id) {
       case "Name":
         return dl.target;
+      case "Domain":
+        var dld = this._dm.getDownload(dl.dlid);
+        var fromString;
+        try {
+          fromString = dld.source.host;
+        }
+        catch (e) { }
+        if (!fromString)
+          fromString = dld.source.prePath;
+        return fromString;
       case "Status":
         switch (dl.state) {
           case nsIDownloadManager.DOWNLOAD_PAUSED:
@@ -888,6 +887,8 @@ DownloadTreeView.prototype = {
         if (dl.endTime)
           return this._convertTimeToString(dl.endTime);
         return "";
+      case "FullPath":
+        return getLocalFileFromNativePathOrUrl(dl.file).path;
       case "Source":
         return dl.uri;
     }

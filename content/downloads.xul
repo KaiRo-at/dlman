@@ -266,6 +266,9 @@
               <menuitem id="menu_ToggleName" type="checkbox" disabled="true"
                         label="&col.name.label;"
                         accesskey="&col.name.accesskey;"/>
+              <menuitem id="menu_ToggleDomain" type="checkbox"
+                        label="&col.domain.label;"
+                        accesskey="&col.domain.accesskey;"/>
               <menuitem id="menu_ToggleStatus" type="checkbox"
                         label="&col.status.label;"
                         accesskey="&col.status.accesskey;"/>
@@ -299,6 +302,9 @@
               <menuitem id="menu_ToggleProgressPercent" type="checkbox"
                         label="&col.progresstext.label;"
                         accesskey="&col.progresstext.accesskey;"/>
+              <menuitem id="menu_ToggleFullPath" type="checkbox"
+                        label="&col.fullpath.label;"
+                        accesskey="&col.fullpath.accesskey;"/>
               <menuitem id="menu_ToggleSource" type="checkbox"
                         label="&col.source.label;"
                         accesskey="&col.source.accesskey;"/>
@@ -315,6 +321,9 @@
               <menuitem id="menu_SortByName" type="radio" name="columns"
                         label="&col.name.label;"
                         accesskey="&col.name.accesskey;"/>
+              <menuitem id="menu_SortByDomain" type="radio" name="columns"
+                        label="&col.domain.label;"
+                        accesskey="&col.domain.accesskey;"/>
               <menuitem id="menu_SortByStatus" type="radio" name="columns"
                         label="&col.status.label;"
                         accesskey="&col.status.accesskey;"/>
@@ -342,6 +351,9 @@
               <menuitem id="menu_SortByProgressPercent" type="radio" name="columns"
                         label="&col.progresstext.label;"
                         accesskey="&col.progresstext.accesskey;"/>
+              <menuitem id="menu_SortByFullPath" type="radio" name="columns"
+                        label="&col.fullpath.label;"
+                        accesskey="&col.fullpath.accesskey;"/>
               <menuitem id="menu_SortBySource" type="radio" name="columns"
                         label="&col.source.label;"
                         accesskey="&col.source.accesskey;"/>
@@ -376,6 +388,12 @@
       <treecol id="Name"
                label="&col.name.label;"
                tooltiptext="&col.name.tooltip;"
+               flex="3"
+               persist="width hidden ordinal sortActive sortDirection"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="Domain"
+               label="&col.domain.label;"
+               tooltiptext="&col.domain.tooltip;"
                flex="3"
                persist="width hidden ordinal sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
@@ -445,6 +463,12 @@
                flex="1"
                persist="width hidden ordinal sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
+      <treecol id="FullPath" hidden="true"
+               label="&col.fullpath.label;"
+               tooltiptext="&col.fullpath.tooltip;"
+               flex="1"
+               persist="width hidden ordinal sortActive sortDirection"/>
+      <splitter class="tree-splitter"/>
       <treecol id="Source" hidden="true"
                label="&col.source.label;"
                tooltiptext="&col.source.tooltip;"
@@ -456,9 +480,5 @@
                   ondragover="gDownloadDNDObserver.onDragOver(event);"
                   ondrop="gDownloadDNDObserver.onDrop(event);"/>
   </tree>
-  <statusbar id="status-bar" class="chromeclass-status">
-    <statusbarpanel id="statusbar-display" flex="1"/>
-    <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>
-  </statusbar>
 
 </window>
