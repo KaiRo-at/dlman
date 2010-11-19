@@ -63,6 +63,10 @@ DIST_FILES = \
   install.rdf \
   $(NULL)
 
+PREF_JS_EXPORTS = \
+  $(srcdir)/prefs.js \
+  $(NULL)
+
 EXTRA_COMPONENTS = \
   aboutDownloads.js \
   dlmanUI.js \

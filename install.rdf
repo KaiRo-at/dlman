@@ -6,7 +6,7 @@
     <em:id>@INSTALL_EXTENSION_ID@</em:id>
     <em:version>@EXTENSION_VERSION@</em:version>
     <em:name>Jökulsárlón Download Manager</em:name>
-    <em:description>Tree-based in-tab download manager</em:description>
+    <em:description>In-tab tabular download manager</em:description>
     <em:creator>Robert Kaiser</em:creator>
     <em:optionsURL>chrome://dlman/content/downloadPrefs.xul</em:optionsURL>
     <!-- Firefox -->
