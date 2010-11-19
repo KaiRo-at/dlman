@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is the SeaMonkey internet suite code.
+   -
+   - The Initial Developer of the Original Code is
+   - the Mozilla Foundation.
+   - Portions created by the Initial Developer are Copyright (C) 2010
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Robert Kaiser <kairo@kairo.at>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="1052.3622"
+   height="744.09448"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.47 r22583"
+   sodipodi:docname="downloadButtons-main.svg">
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.69842875"
+     inkscape:cx="526.18109"
+     inkscape:cy="372.04724"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     units="mm"
+     inkscape:window-width="1280"
+     inkscape:window-height="953"
+     inkscape:window-x="-3"
+     inkscape:window-y="-4"
+     inkscape:window-maximized="1" />
+  <defs
+     id="defs4" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(0,-308.26769)"
+     id="layer1"
+     inkscape:groupmode="layer"
+     inkscape:label="Ebene 1">
+    <path
+       transform="matrix(0.83024878,0,0,0.83024878,-72.709979,178.73495)"
+       d="m 363.67847,475.50076 c 0,67.07846 -54.37784,121.4563 -121.4563,121.4563 -67.07846,0 -121.4563,-54.37784 -121.4563,-121.4563 0,-67.07846 54.37784,-121.4563 121.4563,-121.4563 67.07846,0 121.4563,54.37784 121.4563,121.4563 z"
+       sodipodi:ry="121.4563"
+       sodipodi:rx="121.4563"
+       sodipodi:cy="475.50076"
+       sodipodi:cx="242.22217"
+       id="path2816"
+       style="fill:#fafbfa;fill-opacity:1;fill-rule:evenodd;stroke:#3b3b3b;stroke-width:12.93162440999999951;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       sodipodi:type="arc"
+       inkscape:export-filename="/mnt/mozilla/projects/SeaMonkey/artwork/theme-mod/classic/downloadButtons-main.png"
+       inkscape:export-xdpi="212.85179"
+       inkscape:export-ydpi="212.85179" />
+    <path
+       id="path3613"
+       d="m 95.023205,520.19138 0,106.08503 91.872325,-53.04251 -91.872325,-53.04252 z"
+       style="fill:#3b3b3b;fill-opacity:1;stroke:none"
+       inkscape:label="Triangle"
+       inkscape:export-filename="/mnt/mozilla/projects/SeaMonkey/artwork/theme-mod/classic/downloadButtons-main.png"
+       inkscape:export-xdpi="212.85179"
+       inkscape:export-ydpi="212.85179" />
+    <path
+       transform="matrix(0.83024878,0,0,0.83024878,193.33166,179.08122)"
+       d="m 363.67847,475.50076 a 121.4563,121.4563 0 1 1 -242.9126,0 121.4563,121.4563 0 1 1 242.9126,0 z"
+       sodipodi:ry="121.4563"
+       sodipodi:rx="121.4563"
+       sodipodi:cy="475.50076"
+       sodipodi:cx="242.22217"
+       id="path2816-8"
+       style="fill:#fafbfa;fill-opacity:1;fill-rule:evenodd;stroke:#3b3b3b;stroke-width:12.93162440999999951;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       sodipodi:type="arc"
+       inkscape:export-filename="/mnt/mozilla/projects/SeaMonkey/artwork/theme-mod/classic/downloadButtons-main.png"
+       inkscape:export-xdpi="212.85179"
+       inkscape:export-ydpi="212.85179" />
+    <path
+       transform="matrix(0.83024878,0,0,0.83024878,458.77736,179.08122)"
+       d="m 363.67847,475.50076 a 121.4563,121.4563 0 1 1 -242.9126,0 121.4563,121.4563 0 1 1 242.9126,0 z"
+       sodipodi:ry="121.4563"
+       sodipodi:rx="121.4563"
+       sodipodi:cy="475.50076"
+       sodipodi:cx="242.22217"
+       id="path2816-4"
+       style="fill:#fafbfa;fill-opacity:1;fill-rule:evenodd;stroke:#3b3b3b;stroke-width:12.93162440999999951;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       sodipodi:type="arc"
+       inkscape:export-filename="/mnt/mozilla/projects/SeaMonkey/artwork/theme-mod/classic/downloadButtons-main.png"
+       inkscape:export-xdpi="212.85179"
+       inkscape:export-ydpi="212.85179" />
+    <path
+       transform="matrix(0.83024878,0,0,0.83024878,724.37482,178.02726)"
+       d="m 363.67847,475.50076 a 121.4563,121.4563 0 1 1 -242.9126,0 121.4563,121.4563 0 1 1 242.9126,0 z"
+       sodipodi:ry="121.4563"
+       sodipodi:rx="121.4563"
+       sodipodi:cy="475.50076"
+       sodipodi:cx="242.22217"
+       id="path2816-2"
+       style="fill:#fafbfa;fill-opacity:1;fill-rule:evenodd;stroke:#3b3b3b;stroke-width:12.93162440999999951;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       sodipodi:type="arc"
+       inkscape:export-filename="/mnt/mozilla/projects/SeaMonkey/artwork/theme-mod/classic/downloadButtons-main.png"
+       inkscape:export-xdpi="212.85179"
+       inkscape:export-ydpi="212.85179" />
+    <path
+       id="path3663-0"
+       style="fill:none;stroke:#3b3b3b;stroke-width:25.8086071;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:none"
+       d="m 434.40997,532.65144 -80.45922,81.37347 m -0.45712,-80.91635 81.37347,80.45922"
+       inkscape:export-filename="/mnt/mozilla/projects/SeaMonkey/artwork/theme-mod/classic/downloadButtons-main.png"
+       inkscape:export-xdpi="212.85179"
+       inkscape:export-ydpi="212.85179" />
+    <path
+       id="path3870-3"
+       style="fill:none;stroke:#3b3b3b;stroke-width:35.43307087000000166;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+       d="m 693.0223,524.34405 0,98.43312 m -66.69048,-98.29578 0,98.43312"
+       inkscape:export-filename="/mnt/mozilla/projects/SeaMonkey/artwork/theme-mod/classic/downloadButtons-main.png"
+       inkscape:export-xdpi="212.85179"
+       inkscape:export-ydpi="212.85179" />
+    <path
+       transform="matrix(0.66026236,0,0,0.66026236,314.12731,398.92938)"
+       style="fill:none;stroke:#3b3b3b;stroke-width:24.14931224;stroke-linecap:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:none;marker-mid:none"
+       d="m 991.02319,275.06078 c -4.72366,31.56092 -31.94732,55.76481 -64.82409,55.76481 -36.20196,0 -65.54944,-29.34748 -65.54944,-65.54944 0,-36.20195 29.34748,-65.54943 65.54944,-65.54943"
+       id="path3899"
+       sodipodi:nodetypes="cssc"
+       inkscape:export-filename="/mnt/mozilla/projects/SeaMonkey/artwork/theme-mod/classic/downloadButtons-main.png"
+       inkscape:export-xdpi="212.85179"
+       inkscape:export-ydpi="212.85179" />
+    <path
+       id="path3613-1"
+       d="m 925.88553,504.26168 0,52.88299 45.79804,-26.44149 -45.79804,-26.4415 z"
+       style="fill:#3b3b3b;fill-opacity:1;stroke:none"
+       inkscape:label="Triangle"
+       inkscape:export-filename="/mnt/mozilla/projects/SeaMonkey/artwork/theme-mod/classic/downloadButtons-main.png"
+       inkscape:export-xdpi="212.85179"
+       inkscape:export-ydpi="212.85179" />
+  </g>
+</svg>

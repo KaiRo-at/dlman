@@ -8,6 +8,7 @@
     <em:name>Jökulsárlón Download Manager</em:name>
     <em:description>Tree-based in-tab download manager</em:description>
     <em:creator>Robert Kaiser</em:creator>
+    <em:optionsURL>chrome://dlman/content/downloadPrefs.xul</em:optionsURL>
     <!-- Firefox -->
     <em:targetApplication>
       <Description>

@@ -51,34 +51,22 @@
 %globalDTD;
 ]>
 
-<window id="downloadManager"
-        title="&downloadManager.title;" statictitle="&downloadManager.title;"
-        onload="dmStartup();" onunload="dmShutdown();"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        width="500" height="400" screenX="10" screenY="10"
-        persist="width height screenX screenY sizemode"
-        toggletoolbar="true"
-        windowtype="Download:Manager">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      id="downloadManager"
+      title="&downloadManager.title;" statictitle="&downloadManager.title;"
+      onload="dmStartup();" onunload="dmShutdown();">
 
   <script type="application/javascript"
-          src="chrome://dlman/content/downloads.js"/>
-  <script type="application/javascript"
           src="chrome://global/content/contentAreaUtils.js"/>
+  <script type="application/javascript"
+          src="chrome://dlman/content/downloads.js"/>
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="dmBundle"
                   src="chrome://dlman/locale/downloads.properties"/>
   </stringbundleset>
 
-  <commandset id="dlWinCommands">
-    <commandset id="tasksCommands">
-      <!-- File Menu -->
-      <command id="cmd_close" oncommand="window.close()"/>
-      <command id="cmd_quit"/>
-      <!-- Search Box -->
-      <command id="cmd_search_focus"
-               oncommand="gSearchBox.focus();"/>
-    </commandset>
+  <commandset id="dmCommands">
     <commandset id="editMenuCommands"/>
     <commandset id="commandUpdate_Downloads"
                 commandupdater="true"
@@ -112,10 +100,13 @@
                oncommand="goDoCommand('cmd_properties');"/>
       <command id="cmd_clearList"
                oncommand="goDoCommand('cmd_clearList');"/>
+      <!-- Search Box -->
+      <command id="cmd_search_focus"
+               oncommand="gSearchBox.focus();"/>
     </commandset>
   </commandset>
 
-  <keyset id="tasksKeys">
+  <keyset id="dmKeys">
     <!-- File Menu -->
     <key id="key_open"
          keycode="VK_ENTER"
@@ -480,5 +471,4 @@
                   ondragover="gDownloadDNDObserver.onDragOver(event);"
                   ondrop="gDownloadDNDObserver.onDrop(event);"/>
   </tree>
-
-</window>
+</page>

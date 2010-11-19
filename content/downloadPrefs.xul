@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
@@ -11,16 +12,15 @@
    - for the specific language governing rights and limitations under the
    - License.
    -
-   - The Original Code is the SeaMonkey internet suite code.
+   - The Original Code is KaiRo's download manager code.
    -
    - The Initial Developer of the Original Code is
-   - the SeaMonkey project at mozilla.org.
-   - Portions created by the Initial Developer are Copyright (C) 2008
+   - Robert Kaiser.
+   - Portions created by the Initial Developer are Copyright (C) 2010
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   -   Justin Wood <Callek@gmail.com>
-   -  Robert Kaiser <kairo@kairo.at>
+   -   Robert Kaiser <kairo@kairo.at>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,21 +36,35 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY progress.title                  "Download in Progress…">
-<!ENTITY closeWindow.key                 "w">
-<!ENTITY cmd.pause.tooltip               "Pause">
-<!ENTITY cmd.resume.tooltip              "Resume">
-<!ENTITY cmd.retry.tooltip               "Retry">
-<!ENTITY cmd.cancel.tooltip              "Cancel">
-<!ENTITY cmd.open.tooltip                "Open">
-<!ENTITY cmd.more.tooltip                "More options">
-<!ENTITY cmd.open.label                  "Open">
-<!ENTITY cmd.open.accesskey              "O">
-<!ENTITY cmd.show.label                  "Open Containing Folder">
-<!ENTITY cmd.show.accesskey              "F">
-<!ENTITY cmd.goToDownloadPage.label      "Go to Download Page">
-<!ENTITY cmd.goToDownloadPage.accesskey  "G">
-<!ENTITY cmd.copyDownloadLink.label      "Copy Download Link">
-<!ENTITY cmd.copyDownloadLink.accesskey  "L">
-<!ENTITY closeWhenDone.label             "Close this window when the download is complete.">
-<!ENTITY closeWhenDone.accesskey         "w">
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE prefwindow SYSTEM "chrome://dlman/locale/downloadPrefs.dtd">
+
+<prefwindow xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <prefpane id="download_pane"
+            label="&pref.download.title;">
+
+    <preferences>
+      <preference id="browser.download.manager.behavior"
+                  name="browser.download.manager.behavior"
+                  type="int"/>
+    </preferences>
+
+    <groupbox>
+      <caption label="&downloadBehavior.label;"/>
+      <radiogroup id="downloadBehavior"
+                  class="indent"
+                  preference="browser.download.manager.behavior">
+        <radio value="0"
+               label="&openDM.label;"
+               accesskey="&openDM.accesskey;"/>
+        <radio value="1"
+               label="&openProgressDialog.label;"
+               accesskey="&openProgressDialog.accesskey;"/>
+        <radio value="2"
+               label="&doNothing.label;"
+               accesskey="&doNothing.accesskey;"/>
+      </radiogroup>
+    </groupbox>
+  </prefpane>
+</prefwindow>

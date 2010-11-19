@@ -46,34 +46,30 @@ treechildren::-moz-tree-image(Name) {
   -moz-margin-end: 2px;
 }
 
-#pauseButton,
 treechildren::-moz-tree-image(ActionPlay, downloading, resumable) {
   /* pause */
-  list-style-image: url("chrome://dlman/skin/downloadButtons.png");
+  list-style-image: url("chrome://dlman/skin/dlButtons.png");
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
 #ActionPlay,
-#resumeButton,
 treechildren::-moz-tree-image(ActionPlay, paused, resumable) {
   /* resume */
-  list-style-image: url("chrome://dlman/skin/downloadButtons.png");
+  list-style-image: url("chrome://dlman/skin/dlButtons.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
-#retryButton,
 treechildren::-moz-tree-image(ActionPlay, failed),
 treechildren::-moz-tree-image(ActionPlay, canceled) {
   /* retry */
-  list-style-image: url("chrome://dlman/skin/downloadButtons.png");
+  list-style-image: url("chrome://dlman/skin/dlButtons.png");
   -moz-image-region: rect(0px, 64px, 16px, 48px);
 }
 
 #ActionStop,
-#cancelButton,
 treechildren::-moz-tree-image(ActionStop, active) {
   /* cancel */
-  list-style-image: url("chrome://dlman/skin/downloadButtons.png");
+  list-style-image: url("chrome://dlman/skin/dlButtons.png");
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
@@ -112,17 +108,43 @@ treechildren::-moz-tree-image(ActionStop, inactive) {
   font-weight: bold;
 }
 
-.mini-button {
+#cmdBox {
+  margin-top: .25em;
+}
+
+/* icon-only buttons */
+.icon-button {
   -moz-appearance: none;
   background-color: transparent;
-  border: none;
-  padding: 0;
-  margin: 0;
   min-width: 0;
   min-height: 0;
 }
 
-.mini-button > .button-box {
+.icon-button:not([type="menu"]) {
+  list-style-image: url("chrome://dlman/skin/dlButtons-large.png");
+}
+
+.icon-button > .button-box {
   -moz-appearance: none;
   padding: 0 !important;
+}
+
+#pauseButton {
+  -moz-image-region: rect(0px, 96px, 32px, 64px);
+}
+
+#resumeButton {
+  -moz-image-region: rect(0px, 32px, 32px, 0px);
+}
+
+#retryButton {
+  -moz-image-region: rect(0px, 128px, 32px, 96px);
+}
+
+#cancelButton {
+  -moz-image-region: rect(0px, 64px, 32px, 32px);
+}
+
+#openButton {
+  -moz-image-region: rect(0px, 160px, 32px, 128px);
 }

@@ -55,24 +55,24 @@ var gCloseWhenDone;
 
 var gLastSec = Infinity;
 var gStartTime = 0;
-var gEndTime = Date.now(); // gets corrected below for calls from dlmgr
+var gEndTime = Date.now(); // Gets corrected below for calls from dlmgr.
 var gDlActive = false;
 var gRetrying = false;
 
 function progressStartup() {
   gDownload = window.arguments[0].QueryInterface(Components.interfaces.nsIDownload);
 
-  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                     .getService(Components.interfaces.nsIWindowMediator);
-  var recentDMWindow = wm.getMostRecentWindow("Download:Manager");
+  var recentDMWindow = Components.classes["@mozilla.org/download-manager-ui;1"]
+                                 .getService(Components.interfaces.nsIKDownloadManagerUI)
+                                 .recentWindow;
   if (recentDMWindow && recentDMWindow.gDownloadTreeView.rowCount > 0) {
-    // we have been opened by a download manager, get the end time from there
+    // A download manager is open, get the end time from there.
     let dmtree = recentDMWindow.gDownloadTreeView;
     let dldata = dmtree.getRowData(dmtree._getIdxForID(gDownload.id));
     gEndTime = dldata.endTime;
   }
 
-  // cache elements to save .getElementById() calls
+  // Cache elements to save .getElementById() calls.
   gDownloadBundle = document.getElementById("dmBundle");
   gTkDlBundle = document.getElementById("tkdlBundle");
   gDlStatus = document.getElementById("dlStatus");
@@ -85,7 +85,7 @@ function progressStartup() {
   // Insert as first controller on the whole window
   window.controllers.insertControllerAt(0, ProgressDlgController);
 
-  gCloseWhenDone.checked = gPrefService.getBoolPref("browser.download.progress.closeWhenDone");
+  gCloseWhenDone.checked = Services.prefs.getBoolPref("browser.download.progress.closeWhenDone");
 
   switch (gDownload.state) {
     case nsIDownloadManager.DOWNLOAD_NOTSTARTED:
@@ -96,7 +96,7 @@ function progressStartup() {
       gDlActive = true;
       break;
     case nsIDownloadManager.DOWNLOAD_FINISHED:
-      if (gCloseWhenDone.checked)
+      if (gCloseWhenDone.checked && !recentDMWindow)
         window.close();
     default:
       gDlActive = false;
@@ -125,18 +125,16 @@ function progressStartup() {
   updateButtons();
   window.updateCommands("dlstate-change");
 
-  // Send a notification that we finished
+  // Send a notification that we finished.
   setTimeout(function()
-    Components.classes["@mozilla.org/observer-service;1"]
-              .getService(Components.interfaces.nsIObserverService)
-              .notifyObservers(window, "download-manager-ui-done", null), 0);
+    Services.io.notifyObservers(window, "download-manager-ui-done", null), 0);
 }
 
 function progressShutdown() {
   gDownloadManager.removeListener(gDownloadListener);
   window.controllers.removeController(ProgressDlgController);
-  gPrefService.setBoolPref("browser.download.progress.closeWhenDone",
-                           gCloseWhenDone.checked);
+  Services.prefs.setBoolPref("browser.download.progress.closeWhenDone",
+                             gCloseWhenDone.checked);
 }
 
 function updateDownload() {
@@ -155,7 +153,7 @@ function updateDownload() {
       break;
   }
   if (gDownload.size >= 0) {
-    // if it was undetermined before, unhide text and switch mode
+    // If it was undetermined before, unhide text and switch mode.
     if (gProgressText.hidden) {
       gProgressText.hidden = false;
       gProgressMeter.mode = "determined";
@@ -168,7 +166,7 @@ function updateDownload() {
     gProgressText.hidden = true;
     gProgressMeter.mode = "undetermined";
   }
-  // Update window title
+  // Update window title.
   var statusString;
   switch (gDownload.state) {
     case nsIDownloadManager.DOWNLOAD_PAUSED:
@@ -220,7 +218,7 @@ function updateDownload() {
 
   // download status
   if (gDlActive) {
-    // Calculate the time remaining if we have valid values
+    // Calculate the time remaining if we have valid values.
     var seconds = (gDownload.speed > 0) && (gDownload.size > 0)
                   ? (gDownload.size - gDownload.amountTransferred) / gDownload.speed
                   : -1;
@@ -270,6 +268,7 @@ function updateButtons() {
   document.getElementById("resumeButton").hidden = !ProgressDlgController.isCommandEnabled("cmd_resume");
   document.getElementById("retryButton").hidden = !ProgressDlgController.isCommandEnabled("cmd_retry");
   document.getElementById("cancelButton").hidden = !ProgressDlgController.isCommandEnabled("cmd_cancel");
+  document.getElementById("openButton").hidden = !ProgressDlgController.isCommandEnabled("cmd_open");
 }
 
 /**
@@ -291,7 +290,7 @@ DlProgressListener.prototype = {
   //// nsIDownloadProgressListener
 
   onDownloadStateChange: function(aState, aDownload) {
-    // first, check if we are retrying and this is the new download starting
+    // First, check if we are retrying and this is the new download starting.
     if (gRetrying &&
         (aDownload.state == nsIDownloadManager.DOWNLOAD_QUEUED ||
          aDownload.state == nsIDownloadManager.DOWNLOAD_BLOCKED_POLICY) &&
@@ -352,7 +351,7 @@ var ProgressDlgController = {
                gDownload.resumable;
       case "cmd_open":
       case "cmd_show":
-        // we can't reveal until the download is complete, because we have not given
+        // We can't reveal until the download is complete, because we have not given
         // the file its final name until them.
         return gDownload.state == nsIDownloadManager.DOWNLOAD_FINISHED &&
                gDownload.targetFile.exists();
@@ -392,7 +391,7 @@ var ProgressDlgController = {
         showDownload(gDownload);
         break;
       case "cmd_openReferrer":
-        openUILink(gDownload.referrer.spec);
+        openURL(gDownload.referrer.spec);
         break;
       case "cmd_copyLocation":
         var clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"]

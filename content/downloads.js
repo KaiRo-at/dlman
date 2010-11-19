@@ -290,13 +290,13 @@ function showDownload(aDownload)
 function showProperties(aDownloadID)
 {
   var dmui = Components.classes["@mozilla.org/download-manager-ui;1"]
-                       .getService(Components.interfaces.nsISuiteDownloadManagerUI);
+                       .getService(Components.interfaces.nsIKDownloadManagerUI);
   dmui.showProgress(window, aDownloadID);
 }
 
 function onTreeSelect(aEvent)
 {
-  window.updateCommands("tree-select");
+  document.commandDispatcher.updateCommands("tree-select");
 }
 
 function onUpdateViewColumns(aMenuItem)
@@ -644,7 +644,7 @@ var dlTreeController = {
         showDownload({targetFile: getLocalFileFromNativePathOrUrl(selItemData[0].file)});
         break;
       case "cmd_openReferrer":
-        openUILink(selItemData[0].referrer);
+        openURL(selItemData[0].referrer);
         break;
       case "cmd_copyLocation":
         var clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
@@ -981,7 +981,7 @@ DownloadTreeView.prototype = {
     // Data has changed, so re-sorting might be needed
     this.sortView("", "", attrs, 0);
 
-    window.updateCommands("tree-select");
+    document.commandDispatcher.updateCommands("tree-select");
   },
 
   updateDownload: function(aDownload) {
@@ -1026,7 +1026,7 @@ DownloadTreeView.prototype = {
     // Data has changed, so re-sorting might be needed
     this.sortView("", "", dl, row);
 
-    window.updateCommands("tree-select");
+    document.commandDispatcher.updateCommands("tree-select");
   },
 
   removeDownload: function(aDownloadID) {
@@ -1050,7 +1050,7 @@ DownloadTreeView.prototype = {
         this.selection.select(index);
     }
 
-    window.updateCommands("tree-select");
+    document.commandDispatcher.updateCommands("tree-select");
   },
 
   initTree: function() {
@@ -1145,7 +1145,7 @@ DownloadTreeView.prototype = {
     }
     this._tree.endUpdateBatch();
 
-    window.updateCommands("tree-select");
+    document.commandDispatcher.updateCommands("tree-select");
 
     // Send a notification that we finished
     setTimeout(function()
