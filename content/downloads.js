@@ -1078,80 +1078,93 @@ DownloadTreeView.prototype = {
     this._statement.bindInt32Parameter(3, nsIDownloadManager.DOWNLOAD_QUEUED);
     this._statement.bindInt32Parameter(4, nsIDownloadManager.DOWNLOAD_SCANNING);
 
-    while (this._statement.executeStep()) {
-      // Try to get the attribute values from the statement
-      let attrs = {
-        dlid: this._statement.getInt64(0),
-        file: this._statement.getString(1),
-        target: this._statement.getString(2),
-        uri: this._statement.getString(3),
-        state: this._statement.getInt32(4),
-        startTime: Math.round(this._statement.getInt64(5) / 1000),
-        endTime: Math.round(this._statement.getInt64(6) / 1000),
-        referrer: this._statement.getString(7),
-        currBytes: this._statement.getInt64(8),
-        maxBytes: this._statement.getInt64(9),
-        lastSec: Infinity, // For calculations of remaining time
-      };
-      let sourceURI = Services.io.newURI(attrs.uri, null, null);
-      try {
-        attrs.domain = sourceURI.host;
-      }
-      catch (e) { }
-      if (!attrs.domain)
-        attrs.domain = sourceURI.prePath;
-
-      // If the download is active, grab the real progress, otherwise default 100
-      attrs.isActive = this._statement.getInt32(10);
-      if (attrs.isActive) {
-        let dld = this._dm.getDownload(attrs.dlid);
-        attrs.progress = dld.percentComplete;
-        attrs.resumable = dld.resumable;
-      }
-      else {
-        attrs.progress = 100;
-        attrs.resumable = false;
-      }
-
-      // Only actually add item to the tree if it's active or matching search
-
-      let matchSearch = true;
-      if (this._searchTerms) {
-        // Search through the download attributes that are shown to the user and
-        // make it into one big string for easy combined searching
-        // XXX: toolkit uses the target, status and dateTime attributes of their XBL item
-        let combinedSearch = attrs.file.toLowerCase() + " " + attrs.uri.toLowerCase();
-        if (attrs.target)
-          combinedSearch = combinedSearch + " " + attrs.target.toLowerCase();
-
-        if (!attrs.isActive)
-          for each (let term in this._searchTerms)
-            if (combinedSearch.indexOf(term) == -1)
-              matchSearch = false;
-      }
-
-      // matchSearch is always true for active downloads, see above
-      if (matchSearch) {
-        attrs.listIndex = this._lastListIndex--;
-        this._dlList.unshift(attrs);
-      }
+    let loaderInstance;
+    function nextStep() {
+      loaderInstance.next();
     }
-    this._statement.reset();
-    // find sorted column and sort the tree
-    var sortedColumn = this._tree.columns.getSortedColumn();
-    if (sortedColumn) {
-      var direction = sortedColumn.element.getAttribute("sortDirection");
-      this.sortView(sortedColumn.id, direction);
+    function loader(aDTV) {
+      let loadCount = 0;
+      while (aDTV._statement.executeStep()) {
+        // Try to get the attribute values from the statement
+        let attrs = {
+          dlid: aDTV._statement.getInt64(0),
+          file: aDTV._statement.getString(1),
+          target: aDTV._statement.getString(2),
+          uri: aDTV._statement.getString(3),
+          state: aDTV._statement.getInt32(4),
+          startTime: Math.round(aDTV._statement.getInt64(5) / 1000),
+          endTime: Math.round(aDTV._statement.getInt64(6) / 1000),
+          referrer: aDTV._statement.getString(7),
+          currBytes: aDTV._statement.getInt64(8),
+          maxBytes: aDTV._statement.getInt64(9),
+          lastSec: Infinity, // For calculations of remaining time
+        };
+        let sourceURI = Services.io.newURI(attrs.uri, null, null);
+        try {
+          attrs.domain = sourceURI.host;
+        }
+        catch (e) { }
+        if (!attrs.domain)
+          attrs.domain = sourceURI.prePath;
+
+        // If the download is active, grab the real progress, otherwise default 100
+        attrs.isActive = aDTV._statement.getInt32(10);
+        if (attrs.isActive) {
+          let dld = aDTV._dm.getDownload(attrs.dlid);
+          attrs.progress = dld.percentComplete;
+          attrs.resumable = dld.resumable;
+        }
+        else {
+          attrs.progress = 100;
+          attrs.resumable = false;
+        }
+
+        // Only actually add item to the tree if it's active or matching search
+
+        let matchSearch = true;
+        if (aDTV._searchTerms) {
+          // Search through the download attributes that are shown to the user and
+          // make it into one big string for easy combined searching
+          // XXX: toolkit uses the target, status and dateTime attributes of their XBL item
+          let combinedSearch = attrs.file.toLowerCase() + " " + attrs.uri.toLowerCase();
+          if (attrs.target)
+            combinedSearch = combinedSearch + " " + attrs.target.toLowerCase();
+
+          if (!attrs.isActive)
+            for each (let term in aDTV._searchTerms)
+              if (combinedSearch.indexOf(term) == -1)
+                matchSearch = false;
+        }
+
+        // matchSearch is always true for active downloads, see above
+        if (matchSearch) {
+          attrs.listIndex = aDTV._lastListIndex--;
+          aDTV._dlList.unshift(attrs);
+        }
+        loadCount++;
+        if (loadCount % 10 == 0)
+          yield setTimeout(nextStep, 0);
+      }
+      yield setTimeout(nextStep, 0);
+
+      aDTV._statement.reset();
+      // find sorted column and sort the tree
+      var sortedColumn = aDTV._tree.columns.getSortedColumn();
+      if (sortedColumn) {
+        var direction = sortedColumn.element.getAttribute("sortDirection");
+        aDTV.sortView(sortedColumn.id, direction);
+      }
+      aDTV._tree.endUpdateBatch();
+
+      document.commandDispatcher.updateCommands("tree-select");
+      yield setTimeout(nextStep, 0);
+
+      // Send a notification that we finished.
+      Services.obs.notifyObservers(window, "download-manager-ui-done", null);
+      yield;
     }
-    this._tree.endUpdateBatch();
-
-    document.commandDispatcher.updateCommands("tree-select");
-
-    // Send a notification that we finished
-    setTimeout(function()
-      Components.classes["@mozilla.org/observer-service;1"]
-                .getService(Components.interfaces.nsIObserverService)
-                .notifyObservers(window, "download-manager-ui-done", null), 0);
+    loaderInstance = loader(this);
+    setTimeout(nextStep, 0);
   },
 
   searchView: function(aInput) {
