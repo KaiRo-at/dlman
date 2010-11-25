@@ -9,6 +9,7 @@ dlman.jar:
 % component {ac31593d-06f1-4b1e-be31-a8a70d9dc5ca} components/dlmanUI.js
 % contract @mozilla.org/download-manager-ui;1 {ac31593d-06f1-4b1e-be31-a8a70d9dc5ca}
   content/dlman/downloadPrefs.xul           (content/downloadPrefs.xul)
+  content/dlman/downloads.css               (content/downloads.css)
   content/dlman/downloads.js                (content/downloads.js)
   content/dlman/downloads.xul               (content/downloads.xul)
   content/dlman/progressDialog.js           (content/progressDialog.js)
@@ -16,6 +17,7 @@ dlman.jar:
   skin/classic/dlman/dl-remove.png          (skin/classic/dl-remove.png)
   skin/classic/dlman/dlButtons.png          (skin/classic/dlButtons.png)
   skin/classic/dlman/dlButtons-large.png    (skin/classic/dlButtons-large.png)
+  skin/classic/dlman/dlIcon-16.png          (skin/classic/dlIcon-16.png)
   skin/classic/dlman/downloads.css          (skin/classic/downloads.css)
   locale/@AB_CD@/dlman/downloadPrefs.dtd    (%chrome/downloadPrefs.dtd)
   locale/@AB_CD@/dlman/downloads.dtd        (%chrome/downloads.dtd)

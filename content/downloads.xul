@@ -37,6 +37,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://dlman/content/downloads.css" type="text/css"?>
 <?xml-stylesheet href="chrome://dlman/skin/downloads.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
@@ -52,9 +53,13 @@
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:xhtml="http://www.w3.org/1999/xhtml"
       id="downloadManager"
       title="&downloadManager.title;" statictitle="&downloadManager.title;"
       onload="dmStartup();" onunload="dmShutdown();">
+
+  <xhtml:link rel="shortcut icon"
+              href="chrome://dlman/skin/dlIcon-16.png"/>
 
   <script type="application/javascript"
           src="chrome://global/content/contentAreaUtils.js"/>

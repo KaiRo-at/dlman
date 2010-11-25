@@ -50,7 +50,7 @@ endif
 MODULE                 = dlman
 XPIDL_MODULE           = dlman
 
-EXTENSION_VERSION      = 0.2
+EXTENSION_VERSION      = 0.3
 
 XPI_NAME               = dlman
 USE_EXTENSION_MANIFEST = 1
