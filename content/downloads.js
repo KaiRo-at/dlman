@@ -77,14 +77,6 @@ function dmStartup()
   gDownloadListener = new DownloadProgressListener();
   gDownloadManager.addListener(gDownloadListener);
 
-  // correct keybinding command attributes which don't do our business yet
-  var key = document.getElementById("key_delete");
-  if (key.hasAttribute("command"))
-    key.setAttribute("command", "cmd_stop");
-  key = document.getElementById("key_delete2");
-  if (key.hasAttribute("command"))
-    key.setAttribute("command", "cmd_stop");
-
   gDownloadTree.focus();
 
   if (gDownloadTree.view.rowCount > 0)
@@ -457,8 +449,6 @@ var dlTreeController = {
       case "cmd_retry":
       case "cmd_cancel":
       case "cmd_delete":
-      case "cmd_remove":
-      case "cmd_stop":
       case "cmd_open":
       case "cmd_show":
       case "cmd_openReferrer":
@@ -547,7 +537,6 @@ var dlTreeController = {
             return false;
         }
         return true;
-      case "cmd_delete":
       case "cmd_remove":
         if (!selectionCount)
           return false;
@@ -558,7 +547,7 @@ var dlTreeController = {
         return true;
       case "cmd_openReferrer":
         return selectionCount == 1 && !!selItemData[0].referrer;
-      case "cmd_stop":
+      case "cmd_delete":
       case "cmd_copy":
       case "cmd_copyLocation":
         return selectionCount > 0;
@@ -626,12 +615,11 @@ var dlTreeController = {
           cancelDownload({id: dldata.dlid,
                           targetFile: getLocalFileFromNativePathOrUrl(dldata.file)});
         break;
-      case "cmd_delete":
       case "cmd_remove":
         for each (let dldata in selItemData)
           removeDownload(dldata.dlid);
         break;
-      case "cmd_stop":
+      case "cmd_delete":
         for each (let dldata in selItemData) {
           if (dldata.isActive)
             // fake an nsIDownload with the properties needed by that function
@@ -699,9 +687,9 @@ var dlTreeController = {
 
   onCommandUpdate: function() {
     var cmds = ["cmd_play", "cmd_pause", "cmd_resume", "cmd_retry",
-                "cmd_cancel", "cmd_remove", "cmd_stop", "cmd_open", "cmd_show",
+                "cmd_cancel", "cmd_remove", "cmd_delete", "cmd_open", "cmd_show",
                 "cmd_openReferrer", "cmd_copyLocation", "cmd_properties",
-                "cmd_selectAll", "cmd_clearList", "cmd_delete", "cmd_copy"];
+                "cmd_selectAll", "cmd_clearList", "cmd_copy"];
     for (let command in cmds)
       goUpdateCommand(cmds[command]);
   }
