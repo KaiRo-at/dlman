@@ -456,11 +456,13 @@ var dlTreeController = {
       case "cmd_resume":
       case "cmd_retry":
       case "cmd_cancel":
+      case "cmd_delete":
       case "cmd_remove":
       case "cmd_stop":
       case "cmd_open":
       case "cmd_show":
       case "cmd_openReferrer":
+      case "cmd_copy":
       case "cmd_copyLocation":
       case "cmd_properties":
       case "cmd_selectAll":
@@ -545,6 +547,7 @@ var dlTreeController = {
             return false;
         }
         return true;
+      case "cmd_delete":
       case "cmd_remove":
         if (!selectionCount)
           return false;
@@ -556,6 +559,7 @@ var dlTreeController = {
       case "cmd_openReferrer":
         return selectionCount == 1 && !!selItemData[0].referrer;
       case "cmd_stop":
+      case "cmd_copy":
       case "cmd_copyLocation":
         return selectionCount > 0;
       case "cmd_properties":
@@ -622,6 +626,7 @@ var dlTreeController = {
           cancelDownload({id: dldata.dlid,
                           targetFile: getLocalFileFromNativePathOrUrl(dldata.file)});
         break;
+      case "cmd_delete":
       case "cmd_remove":
         for each (let dldata in selItemData)
           removeDownload(dldata.dlid);
@@ -646,6 +651,7 @@ var dlTreeController = {
       case "cmd_openReferrer":
         openURL(selItemData[0].referrer);
         break;
+      case "cmd_copy":
       case "cmd_copyLocation":
         var clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
                                   .getService(Components.interfaces.nsIClipboardHelper);
@@ -695,7 +701,7 @@ var dlTreeController = {
     var cmds = ["cmd_play", "cmd_pause", "cmd_resume", "cmd_retry",
                 "cmd_cancel", "cmd_remove", "cmd_stop", "cmd_open", "cmd_show",
                 "cmd_openReferrer", "cmd_copyLocation", "cmd_properties",
-                "cmd_selectAll", "cmd_clearList"];
+                "cmd_selectAll", "cmd_clearList", "cmd_delete", "cmd_copy"];
     for (let command in cmds)
       goUpdateCommand(cmds[command]);
   }

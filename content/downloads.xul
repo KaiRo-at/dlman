@@ -112,6 +112,7 @@
   </commandset>
 
   <keyset id="dmKeys">
+    <keyset id="editMenuKeys"/>
     <!-- File Menu -->
     <key id="key_open"
          keycode="VK_ENTER"
@@ -119,17 +120,10 @@
     <key id="key_open2"
          keycode="VK_RETURN"
          command="cmd_open"/>
-    <key id="key_close"/>
-    <key id="key_quit"/>
     <!-- Edit Menu -->
-    <key id="key_cut"/>
-    <key id="key_copy"/>
     <key id="key_play"
          key=" "
          command="cmd_play"/>
-    <key id="key_delete"/>
-    <key id="key_delete2"/>
-    <key id="key_selectAll"/>
     <!-- Search Box -->
     <key id="key_search_focus"
          command="cmd_search_focus"
