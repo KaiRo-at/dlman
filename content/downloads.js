@@ -60,6 +60,15 @@ function dmStartup()
   gDownloadTree = document.getElementById("downloadTree");
   gSearchBox = document.getElementById("search-box");
 
+  // Add ourselves to the whitelist for disabling browser chrome.
+  var win = Services.wm.getMostRecentWindow("navigator:browser");
+  if (win && win.XULBrowserWindow && win.XULBrowserWindow.inContentWhitelist &&
+      !win.XULBrowserWindow.inContentWhitelist.some(function(aSpec) {
+          return aSpec == location;
+        })) {
+    win.XULBrowserWindow.inContentWhitelist.push(location.href);
+  }
+
   // Insert as first controller on the whole window
   window.controllers.insertControllerAt(0, dlTreeController);
 
