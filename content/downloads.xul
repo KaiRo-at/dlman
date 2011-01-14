@@ -56,6 +56,7 @@
       xmlns:xhtml="http://www.w3.org/1999/xhtml"
       id="downloadManager"
       title="&downloadManager.title;" statictitle="&downloadManager.title;"
+      disablefastfind="true"
       onload="dmStartup();" onunload="dmShutdown();">
 
   <xhtml:link rel="shortcut icon"
