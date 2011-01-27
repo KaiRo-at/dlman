@@ -1063,17 +1063,15 @@ DownloadTreeView.prototype = {
     // or because we need to recreate it
     this._tree.beginUpdateBatch();
     this._dlList = [];
-    this._lastListIndex = 0;
 
     this.selection.clearSelection();
 
-    // sort in reverse and prepend to the list to get continuous list indexes
-    // with increasing negative numbers for default-sort in ascending order
+    // Sort as they should appear while loading and in unsorted list.
     this._statement = this._dm.DBConnection.createStatement(
       "SELECT id, target, name, source, state, startTime, endTime, referrer, " +
             "currBytes, maxBytes, state IN (?1, ?2, ?3, ?4, ?5) AS isActive " +
       "FROM moz_downloads " +
-      "ORDER BY isActive ASC, endTime ASC, startTime ASC, id DESC");
+      "ORDER BY isActive DESC, endTime DESC, startTime DESC, id ASC");
 
     this._statement.bindInt32Parameter(0, nsIDownloadManager.DOWNLOAD_NOTSTARTED);
     this._statement.bindInt32Parameter(1, nsIDownloadManager.DOWNLOAD_DOWNLOADING);
@@ -1110,7 +1108,7 @@ DownloadTreeView.prototype = {
         if (!attrs.domain)
           attrs.domain = sourceURI.prePath;
 
-        // If the download is active, grab the real progress, otherwise default 100
+        // If active, grab real progress, otherwise default to 100.
         attrs.isActive = aDTV._statement.getInt32(10);
         if (attrs.isActive) {
           let dld = aDTV._dm.getDownload(attrs.dlid);
@@ -1122,12 +1120,12 @@ DownloadTreeView.prototype = {
           attrs.resumable = false;
         }
 
-        // Only actually add item to the tree if it's active or matching search
+        // Only actually add item to tree if it's active or matching search.
 
         let matchSearch = true;
         if (aDTV._searchTerms) {
           // Search through the download attributes that are shown to the user and
-          // make it into one big string for easy combined searching
+          // make it into one big string for easy combined searching.
           // XXX: toolkit uses the target, status and dateTime attributes of their XBL item
           let combinedSearch = attrs.file.toLowerCase() + " " + attrs.uri.toLowerCase();
           if (attrs.target)
@@ -1141,17 +1139,29 @@ DownloadTreeView.prototype = {
 
         // matchSearch is always true for active downloads, see above
         if (matchSearch) {
-          attrs.listIndex = aDTV._lastListIndex--;
-          aDTV._dlList.unshift(attrs);
+          aDTV._dlList.push(attrs);
         }
         loadCount++;
-        if (loadCount % 10 == 0)
+        // Make sure not to yield before active downloads are in the list,
+        // but do so a few times afterwards to allow interaction while loading.
+        if (!attrs.isActive && loadCount % 10 == 0) {
+          aDTV._tree.endUpdateBatch();
           yield setTimeout(nextStep, 0);
+          aDTV._tree.beginUpdateBatch();
+        }
       }
+      aDTV._tree.endUpdateBatch();
       yield setTimeout(nextStep, 0);
 
+      // Loop in reverse to get continuous list indexes with increasing
+      // negative numbers for default-sort in ascending order.
+      this._lastListIndex = 0;
+      for (let i = aDTV._dlList.length - 1; i >= 0; i--)
+        aDTV._dlList[i].listIndex = aDTV._lastListIndex--;
+
       aDTV._statement.reset();
-      // find sorted column and sort the tree
+      // Find sorted column and sort the tree.
+      aDTV._tree.beginUpdateBatch();
       var sortedColumn = aDTV._tree.columns.getSortedColumn();
       if (sortedColumn) {
         var direction = sortedColumn.element.getAttribute("sortDirection");
@@ -1433,9 +1443,12 @@ var gDownloadDNDObserver = {
   onDragOver: function (aEvent)
   {
     var types = aEvent.dataTransfer.types;
-    if (types.contains("text/uri-list") ||
-        types.contains("text/x-moz-url") ||
-        types.contains("text/plain"))
+    // Exclude x-moz-fileas we don't need to download local files,
+    // and those could be from ourselves.
+    if (!types.contains("application/x-moz-file") &&
+        (types.contains("text/uri-list") ||
+         types.contains("text/x-moz-url") ||
+         types.contains("text/plain")))
       aEvent.preventDefault();
     aEvent.stopPropagation();
   },
