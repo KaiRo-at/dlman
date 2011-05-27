@@ -1443,7 +1443,7 @@ var gDownloadDNDObserver = {
   onDragOver: function (aEvent)
   {
     var types = aEvent.dataTransfer.types;
-    // Exclude x-moz-fileas we don't need to download local files,
+    // Exclude x-moz-file as we don't need to download local files,
     // and those could be from ourselves.
     if (!types.contains("application/x-moz-file") &&
         (types.contains("text/uri-list") ||
