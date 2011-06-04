@@ -48,6 +48,9 @@
       <preference id="browser.download.manager.behavior"
                   name="browser.download.manager.behavior"
                   type="int"/>
+      <preference id="extensions.dlman.nopcttitle"
+                  name="extensions.dlman.nopcttitle"
+                  type="bool"/>
     </preferences>
 
     <groupbox>
@@ -66,5 +69,10 @@
                accesskey="&doNothing.accesskey;"/>
       </radiogroup>
     </groupbox>
+
+    <checkbox id="noPctTitle"
+              label="&noPctTitle.label;"
+              accesskey="&noPctTitle.accesskey;"
+              preference="extensions.dlman.nopcttitle"/>
   </prefpane>
 </prefwindow>

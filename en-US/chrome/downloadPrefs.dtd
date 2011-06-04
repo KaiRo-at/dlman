@@ -7,3 +7,6 @@
 <!ENTITY openProgressDialog.accesskey   "O">
 <!ENTITY doNothing.label                "Don't open anything">
 <!ENTITY doNothing.accesskey            "D">
+
+<!ENTITY noPctTitle.label               "Don't show percentage in title (reduce app tab flashing)">
+<!ENTITY noPctTitle.accesskey           "p">

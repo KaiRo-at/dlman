@@ -40,7 +40,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 
 // nsIDownloadManager, gDownloadManager, gDownloadListener
-// are defined in downloadmanager.js
+// are defined in downloads.js
 
 var gDownload;
 var gDownloadBundle;

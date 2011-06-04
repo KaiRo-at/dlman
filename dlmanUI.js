@@ -151,44 +151,52 @@ nsDownloadManagerUI.prototype = {
     } catch (e) { /* it's OK to not have a parent window */ }
 
     // We pass the download manager and the nsIDownload we want selected (if any)
-    var params = Cc["@mozilla.org/array;1"].
+    let params = Cc["@mozilla.org/array;1"].
                  createInstance(Ci.nsIMutableArray);
+    let pArr = []; // pure JS version of the same
 
     // Don't fail if our passed in ID is invalid
-    var download = null;
+    let download = null;
     try {
       let dm = Cc["@mozilla.org/download-manager;1"].
                getService(Ci.nsIDownloadManager);
       download = dm.getDownload(aID);
     } catch (ex) {}
     params.appendElement(download, false);
+    pArr.push(download);
 
     // Pass in the reason as well
     let reason = Cc["@mozilla.org/supports-PRInt16;1"].
                  createInstance(Ci.nsISupportsPRInt16);
     reason.data = aReason;
     params.appendElement(reason, false);
+    pArr.push(reason);
 
-    var manager = DOWNLOAD_MANAGER_URL;
     try {
-      if (Services.prefs.getBoolPref(PREF_FORCE_TOOLKIT_UI))
+      if (Services.prefs.getBoolPref(PREF_FORCE_TOOLKIT_UI)) {
         Services.ww.openWindow(parent,
                                TOOLKIT_MANAGER_URL,
                                null,
                                "all,dialog=no",
                                params);
+        return;
+      }
     } catch(ex) {}
 
-    var win = Services.wm.getMostRecentWindow("navigator:browser");
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
     if (!win)
       win = Services.ww.openWindow("_blank",
                                    this._getBrowserURL(),
                                    null,
                                    "chrome,all,dialog=no",
                                    null);
-    win.switchToTabHavingURI(DOWNLOAD_MANAGER_URL, true, function(browser) {
-      browser.contentWindow.wrappedJSObject.arguments = params;
-    });
+
+    Services.obs.addObserver(function setArguments(aSubject, aTopic, aData) {
+      aSubject.arguments = pArr;
+      Services.obs.removeObserver(setArguments, "dlman-exists");
+    }, "dlman-exists", false);
+    Services.obs.notifyObservers(null, "dlman-exist-request", "");
+    win.switchToTabHavingURI(DOWNLOAD_MANAGER_URL, true);
   },
 
   showProgress: function showProgress(aWindowContext, aID, aReason)

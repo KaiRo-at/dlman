@@ -57,6 +57,9 @@ var gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
 
 function dmStartup()
 {
+  Services.obs.notifyObservers(window, "dlman-exists", "");
+  Services.obs.addObserver(sendExists, "dlman-exist-request", false);
+
   gDownloadTree = document.getElementById("downloadTree");
   gSearchBox = document.getElementById("search-box");
 
@@ -69,6 +72,18 @@ function dmStartup()
     win.XULBrowserWindow.inContentWhitelist.push(location.href);
   }
 
+  if (window.arguments) {
+    // Close again if the pref for this is set and this window was
+    // automatically opened but the download is already completed.
+    let download = window.arguments[0];
+    let reason = window.arguments[1];
+    let closeWhenDone = Services.prefs.getBoolPref("browser.download.manager.closeWhenDone");
+    if (reason != Components.interfaces.nsIDownloadManagerUI.REASON_USER_INTERACTED &&
+        download.state == nsIDownloadManager.DOWNLOAD_FINISHED &&
+        closeWhenDone)
+      window.close();
+  }
+
   // Insert as first controller on the whole window
   window.controllers.insertControllerAt(0, dlTreeController);
 
@@ -77,9 +92,7 @@ function dmStartup()
   gDownloadTreeView = new DownloadTreeView(gDownloadManager);
   gDownloadTree.view = gDownloadTreeView;
 
-  let obs = Components.classes["@mozilla.org/observer-service;1"]
-                      .getService(Components.interfaces.nsIObserverService);
-  obs.addObserver(gDownloadObserver, "download-manager-remove-download", false);
+  Services.obs.addObserver(gDownloadObserver, "download-manager-remove-download", false);
 
   // The DownloadProgressListener (DownloadProgressListener.js) handles
   // progress notifications.
@@ -95,10 +108,13 @@ function dmStartup()
 function dmShutdown()
 {
   gDownloadManager.removeListener(gDownloadListener);
-  let obs = Components.classes["@mozilla.org/observer-service;1"]
-                      .getService(Components.interfaces.nsIObserverService);
-  obs.removeObserver(gDownloadObserver, "download-manager-remove-download");
+  Services.obs.removeObserver(gDownloadObserver, "download-manager-remove-download");
+  Services.obs.removeObserver(sendExists, "dlman-exist-request");
   window.controllers.removeController(dlTreeController);
+}
+
+function sendExists(aSubject, aTopic, aData) {
+  Services.obs.notifyObservers(window, "dlman-exists", "");
 }
 
 function searchDownloads(aInput)
@@ -393,8 +409,14 @@ function onUpdateProgress()
     gLastComputedMean = mean;
     gLastActiveDownloads = numActiveDownloads;
 
+    // Would be better to automate this based on <ourtab>.pinned, but no idea
+    // how to access the tab object belonging to this document... see bug 536267
+    let nopct;
+    try { nopct = Services.prefs.getBoolPref("extensions.dlman.nopcttitle"); }
+    catch (e) { nopct = false; }
+
     var title;
-    if (base == 0)
+    if (base == 0 || nopct)
       title = dlbundle.getFormattedString("downloadsTitleFiles",
                                           [numActiveDownloads]);
     else
@@ -1061,7 +1083,6 @@ DownloadTreeView.prototype = {
       return
     // We're resetting the whole list, either because we're creating the tree
     // or because we need to recreate it
-    this._tree.beginUpdateBatch();
     this._dlList = [];
 
     this.selection.clearSelection();
@@ -1073,111 +1094,104 @@ DownloadTreeView.prototype = {
       "FROM moz_downloads " +
       "ORDER BY isActive DESC, endTime DESC, startTime DESC, id ASC");
 
-    this._statement.bindInt32Parameter(0, nsIDownloadManager.DOWNLOAD_NOTSTARTED);
-    this._statement.bindInt32Parameter(1, nsIDownloadManager.DOWNLOAD_DOWNLOADING);
-    this._statement.bindInt32Parameter(2, nsIDownloadManager.DOWNLOAD_PAUSED);
-    this._statement.bindInt32Parameter(3, nsIDownloadManager.DOWNLOAD_QUEUED);
-    this._statement.bindInt32Parameter(4, nsIDownloadManager.DOWNLOAD_SCANNING);
+    this._statement.bindByIndex(0, nsIDownloadManager.DOWNLOAD_NOTSTARTED);
+    this._statement.bindByIndex(1, nsIDownloadManager.DOWNLOAD_DOWNLOADING);
+    this._statement.bindByIndex(2, nsIDownloadManager.DOWNLOAD_PAUSED);
+    this._statement.bindByIndex(3, nsIDownloadManager.DOWNLOAD_QUEUED);
+    this._statement.bindByIndex(4, nsIDownloadManager.DOWNLOAD_SCANNING);
 
-    let loaderInstance;
-    function nextStep() {
-      loaderInstance.next();
-    }
-    function loader(aDTV) {
-      let loadCount = 0;
-      while (aDTV._statement.executeStep()) {
-        // Try to get the attribute values from the statement
-        let attrs = {
-          dlid: aDTV._statement.getInt64(0),
-          file: aDTV._statement.getString(1),
-          target: aDTV._statement.getString(2),
-          uri: aDTV._statement.getString(3),
-          state: aDTV._statement.getInt32(4),
-          startTime: Math.round(aDTV._statement.getInt64(5) / 1000),
-          endTime: Math.round(aDTV._statement.getInt64(6) / 1000),
-          referrer: aDTV._statement.getString(7),
-          currBytes: aDTV._statement.getInt64(8),
-          maxBytes: aDTV._statement.getInt64(9),
-          lastSec: Infinity, // For calculations of remaining time
-        };
-        let sourceURI = Services.io.newURI(attrs.uri, null, null);
-        try {
-          attrs.domain = sourceURI.host;
-        }
-        catch (e) { }
-        if (!attrs.domain)
-          attrs.domain = sourceURI.prePath;
+    let self = this;
+    this._statement.executeAsync({
+      handleResult: function(aResultSet) {
+        for (let row = aResultSet.getNextRow(); row; row = aResultSet.getNextRow()) {
+          // Try to get the attribute values from the statement
+          let attrs = {
+            dlid: row.getResultByName("id"),
+            file: row.getResultByName("target"),
+            target: row.getResultByName("name"),
+            uri: row.getResultByName("source"),
+            state: row.getResultByName("state"),
+            startTime: Math.round(row.getResultByName("startTime") / 1000),
+            endTime: Math.round(row.getResultByName("endTime") / 1000),
+            referrer: row.getResultByName("referrer"),
+            currBytes: row.getResultByName("currBytes"),
+            maxBytes: row.getResultByName("maxBytes"),
+            lastSec: Infinity, // For calculations of remaining time
+            isActive: row.getResultByName("isActive"),
+          };
+          let sourceURI = Services.io.newURI(attrs.uri, null, null);
+          try {
+            attrs.domain = sourceURI.host;
+          }
+          catch (e) { }
+          if (!attrs.domain)
+            attrs.domain = sourceURI.prePath;
 
-        // If active, grab real progress, otherwise default to 100.
-        attrs.isActive = aDTV._statement.getInt32(10);
-        if (attrs.isActive) {
-          let dld = aDTV._dm.getDownload(attrs.dlid);
-          attrs.progress = dld.percentComplete;
-          attrs.resumable = dld.resumable;
-        }
-        else {
-          attrs.progress = 100;
-          attrs.resumable = false;
-        }
+          // If active, grab real progress, otherwise default to 100.
+          if (attrs.isActive) {
+            let dld = self._dm.getDownload(attrs.dlid);
+            attrs.progress = dld.percentComplete;
+            attrs.resumable = dld.resumable;
+          }
+          else {
+            attrs.progress = 100;
+            attrs.resumable = false;
+          }
 
-        // Only actually add item to tree if it's active or matching search.
+          // Only actually add item to tree if it's active or matching search.
 
-        let matchSearch = true;
-        if (aDTV._searchTerms) {
-          // Search through the download attributes that are shown to the user and
-          // make it into one big string for easy combined searching.
-          // XXX: toolkit uses the target, status and dateTime attributes of their XBL item
-          let combinedSearch = attrs.file.toLowerCase() + " " + attrs.uri.toLowerCase();
-          if (attrs.target)
-            combinedSearch = combinedSearch + " " + attrs.target.toLowerCase();
+          let matchSearch = true;
+          if (self._searchTerms) {
+            // Search through the download attributes that are shown to the user and
+            // make it into one big string for easy combined searching.
+            // XXX: toolkit uses the target, status and dateTime attributes of their XBL item
+            let combinedSearch = attrs.file.toLowerCase() + " " + attrs.uri.toLowerCase();
+            if (attrs.target)
+              combinedSearch = combinedSearch + " " + attrs.target.toLowerCase();
 
-          if (!attrs.isActive)
-            for each (let term in aDTV._searchTerms)
-              if (combinedSearch.indexOf(term) == -1)
-                matchSearch = false;
-        }
+            if (!attrs.isActive)
+              for each (let term in self._searchTerms)
+                if (combinedSearch.indexOf(term) == -1)
+                  matchSearch = false;
+          }
 
-        // matchSearch is always true for active downloads, see above
-        if (matchSearch) {
-          aDTV._dlList.push(attrs);
+          // matchSearch is always true for active downloads, see above.
+          if (matchSearch) {
+            self._dlList.push(attrs);
+          }
         }
-        loadCount++;
-        // Make sure not to yield before active downloads are in the list,
-        // but do so a few times afterwards to allow interaction while loading.
-        if (!attrs.isActive && loadCount % 10 == 0) {
-          aDTV._tree.endUpdateBatch();
-          yield setTimeout(nextStep, 0);
-          aDTV._tree.beginUpdateBatch();
+        // Here we could deal with potentially unifished batches of results.
+      },
+
+      handleError: function(aError) {
+        // Error: aError.message
+      },
+
+      handleCompletion: function(aReason) {
+        // Assume (aReason == Components.interfaces.mozIStorageStatementCallback.REASON_FINISHED)
+        // We don't handle abort/cancel here right now!
+
+        // Loop in reverse to get continuous list indexes with increasing
+        // negative numbers for default-sort in ascending order.
+        this._lastListIndex = 0;
+        for (let i = self._dlList.length - 1; i >= 0; i--)
+          self._dlList[i].listIndex = self._lastListIndex--;
+
+        // Find sorted column and sort the tree.
+        self._tree.beginUpdateBatch();
+        var sortedColumn = self._tree.columns.getSortedColumn();
+        if (sortedColumn) {
+          var direction = sortedColumn.element.getAttribute("sortDirection");
+          self.sortView(sortedColumn.id, direction);
         }
+        self._tree.endUpdateBatch();
+
+        document.commandDispatcher.updateCommands("tree-select");
+
+        // Send a notification that we finished.
+        Services.obs.notifyObservers(window, "download-manager-ui-done", null);
       }
-      aDTV._tree.endUpdateBatch();
-      yield setTimeout(nextStep, 0);
-
-      // Loop in reverse to get continuous list indexes with increasing
-      // negative numbers for default-sort in ascending order.
-      this._lastListIndex = 0;
-      for (let i = aDTV._dlList.length - 1; i >= 0; i--)
-        aDTV._dlList[i].listIndex = aDTV._lastListIndex--;
-
-      aDTV._statement.reset();
-      // Find sorted column and sort the tree.
-      aDTV._tree.beginUpdateBatch();
-      var sortedColumn = aDTV._tree.columns.getSortedColumn();
-      if (sortedColumn) {
-        var direction = sortedColumn.element.getAttribute("sortDirection");
-        aDTV.sortView(sortedColumn.id, direction);
-      }
-      aDTV._tree.endUpdateBatch();
-
-      document.commandDispatcher.updateCommands("tree-select");
-      yield setTimeout(nextStep, 0);
-
-      // Send a notification that we finished.
-      Services.obs.notifyObservers(window, "download-manager-ui-done", null);
-      yield;
-    }
-    loaderInstance = loader(this);
-    setTimeout(nextStep, 0);
+    });
   },
 
   searchView: function(aInput) {
