@@ -60,7 +60,7 @@ var gDlActive = false;
 var gRetrying = false;
 
 function progressStartup() {
-  gDownload = window.arguments[0].QueryInterface(Components.interfaces.nsIDownload);
+  gDownload = window.arguments[0];
 
   var recentDMWindow = Components.classes["@mozilla.org/download-manager-ui;1"]
                                  .getService(Components.interfaces.nsIKDownloadManagerUI)
@@ -141,6 +141,16 @@ function updateDownload() {
   switch (gDownload.state) {
     case nsIDownloadManager.DOWNLOAD_NOTSTARTED:
     case nsIDownloadManager.DOWNLOAD_DOWNLOADING:
+      // At this point, we know if we are an indeterminate download or not.
+      if (gDownload.progress == -1) {
+        gProgressText.hidden = true;
+        gProgressMeter.mode = "undetermined";
+      }
+      else if (gProgressText.hidden) {
+        // If it was undetermined before, unhide text and switch mode.
+        gProgressText.hidden = false;
+        gProgressMeter.mode = "determined";
+      }
     case nsIDownloadManager.DOWNLOAD_PAUSED:
     case nsIDownloadManager.DOWNLOAD_QUEUED:
     case nsIDownloadManager.DOWNLOAD_SCANNING:
@@ -153,18 +163,9 @@ function updateDownload() {
       break;
   }
   if (gDownload.size >= 0) {
-    // If it was undetermined before, unhide text and switch mode.
-    if (gProgressText.hidden) {
-      gProgressText.hidden = false;
-      gProgressMeter.mode = "determined";
-    }
     gProgressMeter.value = gDownload.percentComplete;
     gProgressText.value = gDownloadBundle.getFormattedString("percentFormat",
                                                              [gDownload.percentComplete]);
-  }
-  else if (!gProgressText.hidden) {
-    gProgressText.hidden = true;
-    gProgressMeter.mode = "undetermined";
   }
   // Update window title.
   var statusString;
