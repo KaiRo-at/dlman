@@ -966,6 +966,7 @@ DownloadTreeView.prototype = {
       uri: aDownload.source.spec,
       state: aDownload.state,
       progress: aDownload.percentComplete,
+      progressMode: nsITreeView.PROGRESS_NONE,
       resumable: aDownload.resumable,
       startTime: Math.round(aDownload.startTime / 1000),
       endTime: Date.now(),
@@ -981,16 +982,16 @@ DownloadTreeView.prototype = {
     if (!attrs.domain)
       attrs.domain = aDownload.source.prePath;
     switch (attrs.state) {
-      case nsIDownloadManager.DOWNLOAD_NOTSTARTED:
       case nsIDownloadManager.DOWNLOAD_DOWNLOADING:
         // At this point, we know if we are an indeterminate download or not.
         attrs.progressMode = attrs.progress == -1 ?
                                                nsITreeView.PROGRESS_UNDETERMINED :
                                                nsITreeView.PROGRESS_NORMAL;
-        // We also might now know the referrer.
+        // We also know the referrer at this point.
         var referrer = aDownload.referrer;
         if (referrer)
           attrs.referrer = referrer.spec;
+      case nsIDownloadManager.DOWNLOAD_NOTSTARTED:
       case nsIDownloadManager.DOWNLOAD_PAUSED:
       case nsIDownloadManager.DOWNLOAD_QUEUED:
       case nsIDownloadManager.DOWNLOAD_SCANNING:
@@ -1035,16 +1036,16 @@ DownloadTreeView.prototype = {
       dl.state = aDownload.state;
       dl.resumable = aDownload.resumable;
       switch (dl.state) {
-        case nsIDownloadManager.DOWNLOAD_NOTSTARTED:
         case nsIDownloadManager.DOWNLOAD_DOWNLOADING:
           // At this point, we know if we are an indeterminate download or not.
-          attrs.progressMode = attrs.progress == -1 ?
-                                                 nsITreeView.PROGRESS_UNDETERMINED :
-                                                 nsITreeView.PROGRESS_NORMAL;
-          // We also might now know the referrer.
+          dl.progressMode = dl.progress == -1 ?
+                                           nsITreeView.PROGRESS_UNDETERMINED :
+                                           nsITreeView.PROGRESS_NORMAL;
+          // We also know the referrer at this point.
           var referrer = aDownload.referrer;
           if (referrer)
-            attrs.referrer = referrer.spec;
+            dl.referrer = referrer.spec;
+        case nsIDownloadManager.DOWNLOAD_NOTSTARTED:
         case nsIDownloadManager.DOWNLOAD_PAUSED:
         case nsIDownloadManager.DOWNLOAD_QUEUED:
         case nsIDownloadManager.DOWNLOAD_SCANNING:
@@ -1138,14 +1139,18 @@ DownloadTreeView.prototype = {
           if (!attrs.domain)
             attrs.domain = sourceURI.prePath;
 
-          // If active, grab real progress, otherwise default to 100.
+          // If the download is active, grab the real progress, otherwise default 100
           if (attrs.isActive) {
             let dld = self._dm.getDownload(attrs.dlid);
             attrs.progress = dld.percentComplete;
+            attrs.progressMode = attrs.progress == -1 ?
+                                 nsITreeView.PROGRESS_UNDETERMINED :
+                                 nsITreeView.PROGRESS_NORMAL;
             attrs.resumable = dld.resumable;
           }
           else {
             attrs.progress = 100;
+            attrs.progressMode = nsITreeView.PROGRESS_NONE;
             attrs.resumable = false;
           }
 

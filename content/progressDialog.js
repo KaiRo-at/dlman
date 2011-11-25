@@ -139,10 +139,9 @@ function progressShutdown() {
 
 function updateDownload() {
   switch (gDownload.state) {
-    case nsIDownloadManager.DOWNLOAD_NOTSTARTED:
     case nsIDownloadManager.DOWNLOAD_DOWNLOADING:
       // At this point, we know if we are an indeterminate download or not.
-      if (gDownload.progress == -1) {
+      if (gDownload.percentComplete == -1) {
         gProgressText.hidden = true;
         gProgressMeter.mode = "undetermined";
       }
@@ -151,6 +150,7 @@ function updateDownload() {
         gProgressText.hidden = false;
         gProgressMeter.mode = "determined";
       }
+    case nsIDownloadManager.DOWNLOAD_NOTSTARTED:
     case nsIDownloadManager.DOWNLOAD_PAUSED:
     case nsIDownloadManager.DOWNLOAD_QUEUED:
     case nsIDownloadManager.DOWNLOAD_SCANNING:
