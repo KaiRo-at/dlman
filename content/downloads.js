@@ -1204,6 +1204,8 @@ DownloadTreeView.prototype = {
 
         document.commandDispatcher.updateCommands("tree-select");
 
+        statement.finalize();
+
         // Send a notification that we finished.
         Services.obs.notifyObservers(window, "download-manager-ui-done", null);
       }
