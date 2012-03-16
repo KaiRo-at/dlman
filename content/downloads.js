@@ -1189,7 +1189,7 @@ DownloadTreeView.prototype = {
 
         // Loop in reverse to get continuous list indexes with increasing
         // negative numbers for default-sort in ascending order.
-        this._lastListIndex = 0;
+        self._lastListIndex = 0;
         for (let i = self._dlList.length - 1; i >= 0; i--)
           self._dlList[i].listIndex = self._lastListIndex--;
 
