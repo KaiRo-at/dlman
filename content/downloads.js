@@ -1100,20 +1100,20 @@ DownloadTreeView.prototype = {
     this.selection.clearSelection();
 
     // Sort as they should appear while loading and in unsorted list.
-    this._statement = this._dm.DBConnection.createStatement(
+    let statement = this._dm.DBConnection.createStatement(
       "SELECT id, target, name, source, state, startTime, endTime, referrer, " +
             "currBytes, maxBytes, state IN (?1, ?2, ?3, ?4, ?5) AS isActive " +
       "FROM moz_downloads " +
       "ORDER BY isActive DESC, endTime DESC, startTime DESC, id ASC");
 
-    this._statement.bindByIndex(0, nsIDownloadManager.DOWNLOAD_NOTSTARTED);
-    this._statement.bindByIndex(1, nsIDownloadManager.DOWNLOAD_DOWNLOADING);
-    this._statement.bindByIndex(2, nsIDownloadManager.DOWNLOAD_PAUSED);
-    this._statement.bindByIndex(3, nsIDownloadManager.DOWNLOAD_QUEUED);
-    this._statement.bindByIndex(4, nsIDownloadManager.DOWNLOAD_SCANNING);
+    statement.bindByIndex(0, nsIDownloadManager.DOWNLOAD_NOTSTARTED);
+    statement.bindByIndex(1, nsIDownloadManager.DOWNLOAD_DOWNLOADING);
+    statement.bindByIndex(2, nsIDownloadManager.DOWNLOAD_PAUSED);
+    statement.bindByIndex(3, nsIDownloadManager.DOWNLOAD_QUEUED);
+    statement.bindByIndex(4, nsIDownloadManager.DOWNLOAD_SCANNING);
 
     let self = this;
-    this._statement.executeAsync({
+    statement.executeAsync({
       handleResult: function(aResultSet) {
         for (let row = aResultSet.getNextRow(); row; row = aResultSet.getNextRow()) {
           // Try to get the attribute values from the statement
@@ -1355,7 +1355,6 @@ DownloadTreeView.prototype = {
 
   _tree: null,
   _dlBundle: null,
-  _statement: null,
   _lastListIndex: 0,
   _selectionCache: null,
   __dateService: null,
