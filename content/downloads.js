@@ -59,7 +59,7 @@ function dmStartup()
   gDownloadTreeView = new DownloadTreeView(gDownloadManager);
   gDownloadTree.view = gDownloadTreeView;
 
-  Services.obs.addObserver(gDownloadObserver, "download-manager-remove-download", false);
+  Services.obs.addObserver(gDownloadObserver, "download-manager-remove-download-guid", false);
 
   // The DownloadProgressListener (DownloadProgressListener.js) handles
   // progress notifications.
@@ -75,7 +75,7 @@ function dmStartup()
 function dmShutdown()
 {
   gDownloadManager.removeListener(gDownloadListener);
-  Services.obs.removeObserver(gDownloadObserver, "download-manager-remove-download");
+  Services.obs.removeObserver(gDownloadObserver, "download-manager-remove-download-guid");
   Services.obs.removeObserver(sendExists, "dlman-exist-request");
   window.controllers.removeController(dlTreeController);
 }
@@ -425,8 +425,8 @@ function getLocalFileFromNativePathOrUrl(aPathOrUrl)
 var gDownloadObserver = {
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "download-manager-remove-download":
-        if (aSubject instanceof Components.interfaces.nsISupportsPRUint32)
+      case "download-manager-remove-download-guid":
+        if (aSubject instanceof Components.interfaces.nsISupportsCString)
           // We have a single download.
           gDownloadTreeView.removeDownload(aSubject.data);
         else
