@@ -1417,8 +1417,7 @@ DownloadTreeView.prototype = {
 };
 
 var gDownloadDNDObserver = {
-  onDragStart: function (aEvent)
-  {
+  onDragStart: function (aEvent) {
     if (!gDownloadTreeView ||
         !gDownloadTreeView.selection ||
         !gDownloadTreeView.selection.count)
@@ -1436,10 +1435,14 @@ var gDownloadDNDObserver = {
     dt.setData("text/uri-list", url + "\r\n");
     dt.setData("text/plain", url + "\n");
     dt.effectAllowed = "copyMove";
+    if (gDownloadTreeView.selection.count == 1)
+      dt.setDragImage(gDownloadStatus, 16, 16);
   },
 
-  onDragOver: function (aEvent)
-  {
+  onDragOver: function (aEvent) {
+    if (disallowDrop(aEvent))
+      return;
+
     var types = aEvent.dataTransfer.types;
     // Exclude x-moz-file as we don't need to download local files,
     // and those could be from ourselves.
@@ -1451,8 +1454,10 @@ var gDownloadDNDObserver = {
     aEvent.stopPropagation();
   },
 
-  onDrop: function(aEvent)
-  {
+  onDrop: function(aEvent) {
+    if (disallowDrop(aEvent))
+      return;
+
     var dt = aEvent.dataTransfer;
     var url = dt.getData("URL");
     var name;
@@ -1460,8 +1465,17 @@ var gDownloadDNDObserver = {
       url = dt.getData("text/x-moz-url") || dt.getData("text/plain");
       [url, name] = url.split("\n");
     }
-    if (url)
-      saveURL(url, name, null, true, true);
+    if (url) {
+      let doc = dt.mozSourceNode ? dt.mozSourceNode.ownerDocument : document;
+      saveURL(url, name || url, null, true, true, null, doc);
+    }
+  },
+
+  disallowDrop: function(aEvent) {
+    var dt = aEvent.dataTransfer;
+    var file = dt.mozGetDataAt("application/x-moz-file", 0);
+    // If this is a local file, Don't try to download it again.
+    return file && file instanceof Components.interfaces.nsIFile;
   }
 };
 
