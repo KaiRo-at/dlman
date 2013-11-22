@@ -11,4 +11,5 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dlman'
 
-MODULE = 'dlman'
+XPI_NAME = 'dlman'
+export('XPI_NAME')
