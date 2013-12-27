@@ -13,3 +13,5 @@ XPIDL_MODULE = 'dlman'
 
 XPI_NAME = 'dlman'
 export('XPI_NAME')
+
+JAR_MANIFESTS += ['jar.mn']
