@@ -11,9 +11,17 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dlman'
 
+NO_JS_MANIFEST = True
+USE_EXTENSION_MANIFEST = True
+
 XPI_NAME = 'dlman'
 export('XPI_NAME')
 
 JAR_MANIFESTS += ['jar.mn']
 
 JS_PREFERENCE_FILES += ['prefs.js']
+
+EXTRA_COMPONENTS += [
+    'aboutDownloads.js',
+    'dlmanUI.js',
+]
